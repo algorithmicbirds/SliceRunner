@@ -1,0 +1,205 @@
+// Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
+
+
+#include "PlayerCharacter/SRPlayerCharacter.h"
+#include "Input/SRDataAsset_InputConfig.h"
+#include "Kismet/GameplayStatics.h"
+#include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Componets/Raycaster/SRRaycastSensor.h"
+#include "GameplayTags/SRGameplayTags.h"
+#include "Input/SREnhancedInputComponent.h"
+
+
+// Sets default values
+ASRPlayerCharacter::ASRPlayerCharacter()
+{
+ 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
+
+
+    // Set size for collision capsule
+    GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+
+    // Create the first person mesh that will be viewed only by this character's owner
+    FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
+
+    FirstPersonMesh->SetupAttachment(GetMesh());
+    FirstPersonMesh->SetOnlyOwnerSee(true);
+    FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+    FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
+
+    // Create the Camera Component	
+    FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
+    FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
+    FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+    FirstPersonCameraComponent->bUsePawnControlRotation = true;
+    FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
+    FirstPersonCameraComponent->bEnableFirstPersonScale = true;
+    FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
+    FirstPersonCameraComponent->FirstPersonScale = 0.6f;
+
+    // configure the character comps
+    GetMesh()->SetOwnerNoSee(true);
+    GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
+
+
+    // Configure character movement
+    GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+    GetCharacterMovement()->AirControl = 1.0f;
+    GetCharacterMovement()->JumpZVelocity = 600.0f;
+
+    Sensor = CreateDefaultSubobject<USRRaycastSensor>(TEXT("Raycast Sensor"));
+}
+
+// Called when the game starts or when spawned
+void ASRPlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void ASRPlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
+    Sensor->SetCastOrigin(GetActorLocation());
+    Sensor->CastLength = 1000.0f;
+    Sensor->SetCastDirection(GetActorRightVector());
+    Sensor->DebugCast();
+    Sensor->SetCastDirection(-GetActorRightVector());
+    Sensor->DebugCast();
+}
+
+// Called to bind functionality to input
+void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+    checkf(InputDataAssetConfig, TEXT("Forgot to assign a valid DataAsset_InputConfig in the editor!"));
+
+    // Get the local player so we can add an Enhanced Input mapping context
+
+    ULocalPlayer* LocalPlayer = GetController<APlayerController>()->GetLocalPlayer();
+    UEnhancedInputLocalPlayerSubsystem* Subsystem =
+        ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+    check(Subsystem);  // Confirm the subsystem exists before adding context
+
+    // Add our default mapping context at priority 0 (highest priority)
+    Subsystem->AddMappingContext(InputDataAssetConfig->DefaultMappingContext, 0);
+
+    // Cast to our custom EnhancedInputComponent
+    USREnhancedInputComponent* SRInputComp =
+        CastChecked<USREnhancedInputComponent>(PlayerInputComponent);
+
+    // Bind Move
+    SRInputComp->BindNativeInputAction(
+        InputDataAssetConfig,
+        SRGameplayTags::InputTag_Move,
+        ETriggerEvent::Triggered,
+        this,
+        &ASRPlayerCharacter::Input_Move
+    );
+
+    // Bind Look
+    SRInputComp->BindNativeInputAction(
+        InputDataAssetConfig,
+        SRGameplayTags::InputTag_Look,
+        ETriggerEvent::Triggered,
+        this,
+        &ASRPlayerCharacter::Input_Look
+    );
+
+    // Bind Jump
+    SRInputComp->BindNativeInputAction(
+        InputDataAssetConfig,
+        SRGameplayTags::InputTag_Jump,
+        ETriggerEvent::Triggered,
+        this,
+        &ASRPlayerCharacter::Input_Jump
+    );
+
+
+    // Bind Jump
+    SRInputComp->BindNativeInputAction(
+        InputDataAssetConfig,
+        SRGameplayTags::InputTag_Dash,
+        ETriggerEvent::Triggered,
+        this,
+        &ASRPlayerCharacter::Input_Dash
+    );
+}
+
+void ASRPlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
+{
+    const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
+    const FRotator MovementRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
+
+    if (MovementVector.Y != 0.0f) {
+        const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+        AddMovementInput(ForwardDirection, MovementVector.Y);
+    }
+
+    if (MovementVector.X != 0.0f) {
+        const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
+
+        if (bIsDashing) {
+            const float MoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
+            FVector DeltaMove = RightDirection * MovementVector.X * MoveSpeed * GetWorld()->GetDeltaSeconds();
+            AddActorWorldOffset(DeltaMove, true);
+            //for making animations work; slowing down time affects movement and slows down input 
+            AddMovementInput(RightDirection, MovementVector.X * 0.1);
+        }
+        else {
+            AddMovementInput(RightDirection, MovementVector.X);
+        }
+    }
+}
+
+void ASRPlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
+{
+    const FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
+    if (LookAxisVector.X != 0.0f) {
+        AddControllerYawInput(LookAxisVector.X);
+    }
+
+    if (LookAxisVector.Y != 0.0f) {
+        AddControllerPitchInput(LookAxisVector.Y);
+    }
+}
+
+void ASRPlayerCharacter::Input_Jump(const FInputActionValue& InputActionValue)
+{
+    if (InputActionValue.Get<bool>())
+    {
+        Jump();
+    }
+    else
+    {
+        StopJumping();
+    }
+}
+
+void ASRPlayerCharacter::Input_Dash(const FInputActionValue& InputActionValue)
+{
+    if (InputActionValue.Get<bool>())
+    {
+        bIsDashing = true;
+        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
+    }
+    else
+    {
+        bIsDashing = false;
+        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+        const FRotator ControlRot(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
+        const FVector ForwardDir = ControlRot.Vector();
+        const float DashStrength = 1500.f;
+        LaunchCharacter(ForwardDir * DashStrength, true, true);
+    }
+}
+
