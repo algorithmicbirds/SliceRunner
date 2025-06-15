@@ -34,10 +34,6 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     GetCharacterMovement()->JumpZVelocity = 600.f;
 
     Sensor = CreateDefaultSubobject<USRRaycastSensor>(TEXT("Raycast Sensor"));
-
-    WallCheckInterval = 0.1f;
-    WallCheckTime = 0.f;
-    bIsDashing = false;
 }
 
 
