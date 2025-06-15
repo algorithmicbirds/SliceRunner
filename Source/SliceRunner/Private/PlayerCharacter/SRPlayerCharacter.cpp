@@ -33,7 +33,6 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     GetCharacterMovement()->AirControl = 1.f;
     GetCharacterMovement()->JumpZVelocity = 600.f;
 
-    Sensor = CreateDefaultSubobject<USRRaycastSensor>(TEXT("Raycast Sensor"));
 }
 
 
@@ -41,8 +40,8 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 // Called when the game starts or when spawned
 void ASRPlayerCharacter::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+
 }
 
 void ASRPlayerCharacter::Landed(const FHitResult& Hit)
@@ -54,20 +53,13 @@ void ASRPlayerCharacter::Landed(const FHitResult& Hit)
 // Called every frame
 void ASRPlayerCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-    if (GetCharacterMovement()->IsFalling() && !bIsWallRunning) {
-        WallCheckTime += DeltaTime;
-        if (WallCheckTime >= WallCheckInterval) {
-            WallCheckTime = 0.0f;
-            CheckForWall();
-        }
-    }
+    Super::Tick(DeltaTime);
 }
 
 // Called to bind functionality to input
 void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
     checkf(InputDataAssetConfig, TEXT("Forgot to assign a valid DataAsset_InputConfig in the editor!"));
 
@@ -185,7 +177,7 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue& InputActionValue)
     }
 }
 
-void ASRPlayerCharacter::StartDashing() 
+void ASRPlayerCharacter::StartDashing()
 {
     bIsDashing = true;
     UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
@@ -203,33 +195,13 @@ void ASRPlayerCharacter::StopDashing()
 
 void ASRPlayerCharacter::CheckForWall()
 {
-    Sensor->CastLength = 300.0f;
-    Sensor->SetCastOrigin(GetActorLocation());
-
-    Sensor->SetCastDirection(GetActorRightVector());
-    Sensor->DebugCast();
-    if (Sensor->HasDetectedHit()) {
-        StartWallRun();
-        return;
-    }
-
-    Sensor->SetCastDirection(-GetActorRightVector());
-    Sensor->DebugCast();
-    if (Sensor->HasDetectedHit()) {
-        StartWallRun();
-    }
 }
 
 
 void ASRPlayerCharacter::StartWallRun()
 {
-    bIsWallRunning = true;
-    FVector WallNormal = Sensor->GetNormal();
-    float WallAndCharacterAligment = FMath::Abs(FVector::DotProduct(WallNormal, GetActorForwardVector()));
-    GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::MakeRandomColor(), FString::SanitizeFloat(WallAndCharacterAligment));
 }
 
 void ASRPlayerCharacter::StopWallRun()
 {
-    bIsWallRunning = false;
 }

@@ -30,17 +30,11 @@ public:
 private:
 #pragma region Components
 
-	/** Pawn mesh: first person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* FirstPersonMesh;
 
-	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USRRaycastSensor* Sensor;
-
 #pragma endregion
 
 #pragma region Inputs
@@ -66,7 +60,5 @@ public:
 	bool bIsDashing = false;
 
 private:
-	float WallCheckInterval = 0.1f;
-	float WallCheckTime = 0.0f;
 	bool bIsWallRunning = false;
 };
