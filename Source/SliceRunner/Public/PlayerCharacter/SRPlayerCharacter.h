@@ -17,18 +17,14 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ASRPlayerCharacter();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Landed(const FHitResult& Hit) override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
@@ -42,7 +38,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USRRaycastSensor* Sensor;
+
 #pragma endregion
 
 #pragma region Inputs
@@ -53,8 +51,22 @@ private:
 	void Input_Look(const FInputActionValue& InputActionValue);
 	void Input_Jump(const FInputActionValue& InputActionValue);
 	void Input_Dash(const FInputActionValue& InputActionValue);
+
+#pragma endregion
+
+#pragma region Actions
+	void StartDashing();
+	void StopDashing();
+	void CheckForWall();
+	void StartWallRun();
+	void StopWallRun();
 #pragma endregion
 
 public:
 	bool bIsDashing = false;
+
+private:
+	float WallCheckInterval = 0.1f;
+	float WallCheckTime = 0.0f;
+	bool bIsWallRunning = false;
 };

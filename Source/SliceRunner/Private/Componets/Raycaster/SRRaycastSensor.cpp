@@ -49,7 +49,7 @@ void USRRaycastSensor::DebugCast()
 			6.0f
 		);
 
-		GEngine->AddOnScreenDebugMessage(-1, 7.0f, FColor::MakeRandomColor(), TEXT("Hello World"));
+		GEngine->AddOnScreenDebugMessage(0, 3.0f, FColor::MakeRandomColor(), TEXT("Hit Detected"));
 	}
 }
 

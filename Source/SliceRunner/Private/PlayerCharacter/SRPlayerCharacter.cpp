@@ -13,48 +13,34 @@
 #include "Input/SREnhancedInputComponent.h"
 
 
-// Sets default values
 ASRPlayerCharacter::ASRPlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
 
+    GetCapsuleComponent()->InitCapsuleSize(55.f, 96.f);
 
-    // Set size for collision capsule
-    GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-
-    // Create the first person mesh that will be viewed only by this character's owner
     FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
-
     FirstPersonMesh->SetupAttachment(GetMesh());
     FirstPersonMesh->SetOnlyOwnerSee(true);
     FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-    FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
+    FirstPersonMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
-    // Create the Camera Component	
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-    FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-    FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+    FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, TEXT("head"));
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
-    FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
-    FirstPersonCameraComponent->bEnableFirstPersonScale = true;
-    FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
-    FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
-    // configure the character comps
-    GetMesh()->SetOwnerNoSee(true);
-    GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
-
-
-    // Configure character movement
-    GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-    GetCharacterMovement()->AirControl = 1.0f;
-    GetCharacterMovement()->JumpZVelocity = 600.0f;
+    GetCharacterMovement()->BrakingDecelerationFalling = 1500.f;
+    GetCharacterMovement()->AirControl = 1.f;
+    GetCharacterMovement()->JumpZVelocity = 600.f;
 
     Sensor = CreateDefaultSubobject<USRRaycastSensor>(TEXT("Raycast Sensor"));
+
+    WallCheckInterval = 0.1f;
+    WallCheckTime = 0.f;
+    bIsDashing = false;
 }
+
+
 
 // Called when the game starts or when spawned
 void ASRPlayerCharacter::BeginPlay()
@@ -63,17 +49,23 @@ void ASRPlayerCharacter::BeginPlay()
 	
 }
 
+void ASRPlayerCharacter::Landed(const FHitResult& Hit)
+{
+    Super::Landed(Hit);
+    StopWallRun();
+}
+
 // Called every frame
 void ASRPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-    Super::Tick(DeltaTime);
-    Sensor->SetCastOrigin(GetActorLocation());
-    Sensor->CastLength = 1000.0f;
-    Sensor->SetCastDirection(GetActorRightVector());
-    Sensor->DebugCast();
-    Sensor->SetCastDirection(-GetActorRightVector());
-    Sensor->DebugCast();
+    if (GetCharacterMovement()->IsFalling() && !bIsWallRunning) {
+        WallCheckTime += DeltaTime;
+        if (WallCheckTime >= WallCheckInterval) {
+            WallCheckTime = 0.0f;
+            CheckForWall();
+        }
+    }
 }
 
 // Called to bind functionality to input
@@ -189,17 +181,59 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue& InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
-        bIsDashing = true;
-        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
+        StartDashing();
     }
     else
     {
-        bIsDashing = false;
-        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
-        const FRotator ControlRot(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
-        const FVector ForwardDir = ControlRot.Vector();
-        const float DashStrength = 1500.f;
-        LaunchCharacter(ForwardDir * DashStrength, true, true);
+        StopDashing();
     }
 }
 
+void ASRPlayerCharacter::StartDashing() 
+{
+    bIsDashing = true;
+    UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
+}
+
+void ASRPlayerCharacter::StopDashing()
+{
+    bIsDashing = false;
+    UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+    const FRotator ControlRot(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
+    const FVector ForwardDir = ControlRot.Vector();
+    const float DashStrength = 1500.f;
+    LaunchCharacter(ForwardDir * DashStrength, true, true);
+}
+
+void ASRPlayerCharacter::CheckForWall()
+{
+    Sensor->CastLength = 300.0f;
+    Sensor->SetCastOrigin(GetActorLocation());
+
+    Sensor->SetCastDirection(GetActorRightVector());
+    Sensor->DebugCast();
+    if (Sensor->HasDetectedHit()) {
+        StartWallRun();
+        return;
+    }
+
+    Sensor->SetCastDirection(-GetActorRightVector());
+    Sensor->DebugCast();
+    if (Sensor->HasDetectedHit()) {
+        StartWallRun();
+    }
+}
+
+
+void ASRPlayerCharacter::StartWallRun()
+{
+    bIsWallRunning = true;
+    FVector WallNormal = Sensor->GetNormal();
+    float WallAndCharacterAligment = FMath::Abs(FVector::DotProduct(WallNormal, GetActorForwardVector()));
+    GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::MakeRandomColor(), FString::SanitizeFloat(WallAndCharacterAligment));
+}
+
+void ASRPlayerCharacter::StopWallRun()
+{
+    bIsWallRunning = false;
+}
