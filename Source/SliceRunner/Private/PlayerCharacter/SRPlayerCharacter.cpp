@@ -1,6 +1,5 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
-
 #include "PlayerCharacter/SRPlayerCharacter.h"
 #include "Input/SRDataAsset_InputConfig.h"
 #include "Kismet/GameplayStatics.h"
@@ -8,16 +7,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Componets/Raycaster/SRRaycastSensor.h"
 #include "GameplayTags/SRGameplayTags.h"
 #include "Input/SREnhancedInputComponent.h"
-
+#include "Debug/DebugHelper.h"
 
 ASRPlayerCharacter::ASRPlayerCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    GetCapsuleComponent()->InitCapsuleSize(55.f, 96.f);
+    GetCapsuleComponent()->InitCapsuleSize(32.f, 96.f);
 
     FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
     FirstPersonMesh->SetupAttachment(GetMesh());
@@ -32,52 +30,35 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     GetCharacterMovement()->BrakingDecelerationFalling = 1500.f;
     GetCharacterMovement()->AirControl = 1.f;
     GetCharacterMovement()->JumpZVelocity = 600.f;
-
 }
-
-
 
 // Called when the game starts or when spawned
-void ASRPlayerCharacter::BeginPlay()
-{
-    Super::BeginPlay();
+void ASRPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
 
-}
-
-void ASRPlayerCharacter::Landed(const FHitResult& Hit)
+void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
     Super::Landed(Hit);
     StopWallRun();
 }
 
 // Called every frame
-void ASRPlayerCharacter::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-}
+void ASRPlayerCharacter::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
 
 // Called to bind functionality to input
-void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
     checkf(InputDataAssetConfig, TEXT("Forgot to assign a valid DataAsset_InputConfig in the editor!"));
 
-    // Get the local player so we can add an Enhanced Input mapping context
-
-    ULocalPlayer* LocalPlayer = GetController<APlayerController>()->GetLocalPlayer();
-    UEnhancedInputLocalPlayerSubsystem* Subsystem =
+    ULocalPlayer *LocalPlayer = GetController<APlayerController>()->GetLocalPlayer();
+    UEnhancedInputLocalPlayerSubsystem *Subsystem =
         ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-    check(Subsystem);  // Confirm the subsystem exists before adding context
-
-    // Add our default mapping context at priority 0 (highest priority)
+    check(Subsystem);
     Subsystem->AddMappingContext(InputDataAssetConfig->DefaultMappingContext, 0);
 
-    // Cast to our custom EnhancedInputComponent
-    USREnhancedInputComponent* SRInputComp =
-        CastChecked<USREnhancedInputComponent>(PlayerInputComponent);
+    USREnhancedInputComponent *SRInputComp = CastChecked<USREnhancedInputComponent>(PlayerInputComponent);
 
-    // Bind Move
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
         SRGameplayTags::InputTag_Move,
@@ -86,7 +67,6 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
         &ASRPlayerCharacter::Input_Move
     );
 
-    // Bind Look
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
         SRGameplayTags::InputTag_Look,
@@ -95,7 +75,6 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
         &ASRPlayerCharacter::Input_Look
     );
 
-    // Bind Jump
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
         SRGameplayTags::InputTag_Jump,
@@ -104,8 +83,6 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
         &ASRPlayerCharacter::Input_Jump
     );
 
-
-    // Bind Jump
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
         SRGameplayTags::InputTag_Dash,
@@ -115,48 +92,58 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     );
 }
 
-void ASRPlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
+void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
 {
     const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
     const FRotator MovementRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
 
-    if (MovementVector.Y != 0.0f) {
+    if (MovementVector.Y != 0.0f)
+    {
         const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
         AddMovementInput(ForwardDirection, MovementVector.Y);
     }
 
-    if (MovementVector.X != 0.0f) {
+    if (MovementVector.X != 0.0f)
+    {
         const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
 
-        if (bIsDashing) {
+        if (bIsDashing)
+        {
             const float MoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
             FVector DeltaMove = RightDirection * MovementVector.X * MoveSpeed * GetWorld()->GetDeltaSeconds();
             AddActorWorldOffset(DeltaMove, true);
-            //for making animations work; slowing down time affects movement and slows down input 
+            // for making animations work; slowing down time affects movement and slows down input
             AddMovementInput(RightDirection, MovementVector.X * 0.1);
         }
-        else {
+        else
+        {
             AddMovementInput(RightDirection, MovementVector.X);
         }
     }
 }
 
-void ASRPlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
+void ASRPlayerCharacter::Input_Look(const FInputActionValue &InputActionValue)
 {
     const FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
-    if (LookAxisVector.X != 0.0f) {
+    if (LookAxisVector.X != 0.0f)
+    {
         AddControllerYawInput(LookAxisVector.X);
     }
 
-    if (LookAxisVector.Y != 0.0f) {
+    if (LookAxisVector.Y != 0.0f)
+    {
         AddControllerPitchInput(LookAxisVector.Y);
     }
 }
 
-void ASRPlayerCharacter::Input_Jump(const FInputActionValue& InputActionValue)
+void ASRPlayerCharacter::Input_Jump(const FInputActionValue &InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
+        if (bIsWallRunning)
+        {
+            StopWallRun();
+        }
         Jump();
     }
     else
@@ -165,7 +152,7 @@ void ASRPlayerCharacter::Input_Jump(const FInputActionValue& InputActionValue)
     }
 }
 
-void ASRPlayerCharacter::Input_Dash(const FInputActionValue& InputActionValue)
+void ASRPlayerCharacter::Input_Dash(const FInputActionValue &InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
@@ -179,8 +166,15 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue& InputActionValue)
 
 void ASRPlayerCharacter::StartDashing()
 {
-    bIsDashing = true;
-    UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
+    if (bIsWallRunning)
+    {
+        StopWallRun();
+    }
+    if (GetCharacterMovement()->IsFalling())
+    {
+        bIsDashing = true;
+        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
+    }
 }
 
 void ASRPlayerCharacter::StopDashing()
@@ -193,15 +187,53 @@ void ASRPlayerCharacter::StopDashing()
     LaunchCharacter(ForwardDir * DashStrength, true, true);
 }
 
-void ASRPlayerCharacter::CheckForWall()
+bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
 {
+    float CharacterAndWallAlignment = FMath::Abs(FVector::DotProduct(Hit.ImpactNormal, GetActorRightVector()));
+    if (CharacterAndWallAlignment > 0.7)
+    {
+        return true;
+    }
+
+    return false;
 }
 
-
-void ASRPlayerCharacter::StartWallRun()
+void ASRPlayerCharacter::StartWallRun(const FHitResult &Hit)
 {
+    bIsWallRunning = true;
+    if (GetCharacterMovement()->IsFalling())
+    {
+        GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+        GetCharacterMovement()->SetPlaneConstraintEnabled(true);
+        GetCharacterMovement()->SetPlaneConstraintNormal(Hit.ImpactNormal);
+    }
 }
 
 void ASRPlayerCharacter::StopWallRun()
 {
+    bIsWallRunning = false;
+    GetCharacterMovement()->SetPlaneConstraintEnabled(false);
+    GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+    GetCharacterMovement()->GravityScale = 1.0f;
+}
+
+void ASRPlayerCharacter::NotifyHit(
+    UPrimitiveComponent *MyComp,
+    AActor *Other,
+    UPrimitiveComponent *OtherComp,
+    bool bSelfMoved,
+    FVector HitLocation,
+    FVector HitNormal,
+    FVector NormalImpulse,
+    const FHitResult &Hit
+)
+{
+    if (CheckForWall(Hit))
+    {
+        StartWallRun(Hit);
+    }
+    else
+    {
+        StopWallRun();
+    }
 }

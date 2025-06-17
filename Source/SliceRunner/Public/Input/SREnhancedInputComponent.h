@@ -8,36 +8,36 @@
 #include "SREnhancedInputComponent.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class SLICERUNNER_API USREnhancedInputComponent : public UEnhancedInputComponent
 {
-	GENERATED_BODY()
-	
-public:
-	template <class UserObject, typename CallBackFunc>
-	void BindNativeInputAction(
-		const  USRDataAsset_InputConfig* InInputConfig,
-		const  FGameplayTag& InInputTag,
-		ETriggerEvent TriggerEvent,
-		UserObject* ContextObject,
-		CallBackFunc Func
-	);
+    GENERATED_BODY()
 
+  public:
+    template <class UserObject, typename CallBackFunc>
+    void BindNativeInputAction(
+        const USRDataAsset_InputConfig *InInputConfig,
+        const FGameplayTag &InInputTag,
+        ETriggerEvent TriggerEvent,
+        UserObject *ContextObject,
+        CallBackFunc Func
+    );
 };
 
-template<class UserObject, typename CallBackFunc>
+template <class UserObject, typename CallBackFunc>
 inline void USREnhancedInputComponent::BindNativeInputAction(
-	const USRDataAsset_InputConfig* InInputConfig,
-	const FGameplayTag& InInputTag,
-	ETriggerEvent TriggerEvent,
-	UserObject* ContextObject,
-	CallBackFunc Func
+    const USRDataAsset_InputConfig *InInputConfig,
+    const FGameplayTag &InInputTag,
+    ETriggerEvent TriggerEvent,
+    UserObject *ContextObject,
+    CallBackFunc Func
 )
 {
-	checkf(InInputConfig, TEXT("Input Config Datasset is null, cannot proceed with binding"));
-	if (UInputAction* FoundAction = InInputConfig->FindNativeInputActionByTag(InInputTag)) {
-		BindAction(FoundAction, TriggerEvent, ContextObject, Func);
-	}
+    checkf(InInputConfig, TEXT("Input Config Datasset is null, cannot proceed with binding"));
+    if (UInputAction *FoundAction = InInputConfig->FindNativeInputActionByTag(InInputTag))
+    {
+        BindAction(FoundAction, TriggerEvent, ContextObject, Func);
+    }
 }

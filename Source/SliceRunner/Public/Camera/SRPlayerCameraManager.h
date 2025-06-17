@@ -7,11 +7,11 @@
 #include "SRPlayerCameraManager.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class SLICERUNNER_API ASRPlayerCameraManager : public APlayerCameraManager
 {
-	GENERATED_BODY()
-	ASRPlayerCameraManager();
+    GENERATED_BODY()
+    ASRPlayerCameraManager();
 };
