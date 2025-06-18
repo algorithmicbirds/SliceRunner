@@ -10,7 +10,7 @@ void Print(const FString &Msg, FColor Color)
 {
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, Color, Msg);
+        GEngine->AddOnScreenDebugMessage(1, 5.0f, Color, Msg);
     }
 }
 
@@ -19,7 +19,16 @@ void Print(const float &InFloat, FColor Color)
     if (GEngine)
     {
         const FString DebugString = FString::Printf(TEXT("%.2f"), InFloat);
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, Color, DebugString);
+        GEngine->AddOnScreenDebugMessage(1, 5.0f, Color, DebugString);
+    }
+}
+
+void Print(const FString &Msg, const float &InFloat, FColor Color)
+{
+    if (GEngine)
+    {
+        const FString DebugString = FString::Printf(TEXT("%s : %.2f"), *Msg, InFloat);
+        GEngine->AddOnScreenDebugMessage(1, 5.0f, Color, DebugString);
     }
 }
 
@@ -30,7 +39,7 @@ void Print(const FVector &InVector, FColor Color)
         const FString DebugString =
             FString::Printf(TEXT("Vector: X=%.2f Y=%.2f Z=%.2f"), InVector.X, InVector.Y, InVector.Z);
 
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, Color, DebugString);
+        GEngine->AddOnScreenDebugMessage(1, 5.0f, Color, DebugString);
     }
 }
 
