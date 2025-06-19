@@ -1,4 +1,4 @@
 [submodule "Content"]
 	path = Content
-	url = https://github.com/algorithmicbirds/SliceRunnerContent
+	url = https://github.com/algorithmicbirds/SliceRunnerContent.git
 	branch = main
