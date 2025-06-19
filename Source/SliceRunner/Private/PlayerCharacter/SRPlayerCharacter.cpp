@@ -42,7 +42,16 @@ void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 }
 
 // Called every frame
-void ASRPlayerCharacter::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
+void ASRPlayerCharacter::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    //Debug::Print(TEXT("Velocity: "), static_cast<float>(GetVelocity().Length()), 2);
+    if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero() && bIsWallRunning)
+    {   
+        //Debug::Print(TEXT("Actor Forward Vector"), GetActorForwardVector(), 1);
+        StopWallRun();
+    }
+}
 
 // Called to bind functionality to input
 void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
@@ -101,12 +110,12 @@ void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
     {
         const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
         AddMovementInput(ForwardDirection, MovementVector.Y);
+    
     }
 
     if (MovementVector.X != 0.0f)
     {
         const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
-
         if (bIsDashing)
         {
             const float MoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
@@ -143,6 +152,12 @@ void ASRPlayerCharacter::Input_Jump(const FInputActionValue &InputActionValue)
         if (bIsWallRunning)
         {
             StopWallRun();
+            FVector PlaneContraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
+            // launch character based on its speeed
+            const float DashStrength = GetVelocity().Length();
+            float Speed = 1.0f;
+            FVector LaunchZDirection = FVector(0, 0, DashStrength);
+            LaunchCharacter(PlaneContraintNormal * DashStrength * Speed + LaunchZDirection, false, true);
         }
         Jump();
     }
@@ -194,7 +209,10 @@ bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
     {
         return true;
     }
-
+    if (CharacterAndWallAlignment < 0.7)
+    {
+        return false;
+    }
     return false;
 }
 
@@ -214,7 +232,6 @@ void ASRPlayerCharacter::StopWallRun()
     bIsWallRunning = false;
     GetCharacterMovement()->SetPlaneConstraintEnabled(false);
     GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-    GetCharacterMovement()->GravityScale = 1.0f;
 }
 
 void ASRPlayerCharacter::NotifyHit(
