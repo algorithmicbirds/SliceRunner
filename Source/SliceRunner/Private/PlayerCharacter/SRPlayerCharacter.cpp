@@ -222,12 +222,7 @@ void ASRPlayerCharacter::StopDashing()
 bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
 {
     float CharacterAndWallAlignment = FMath::Abs(FVector::DotProduct(Hit.ImpactNormal, GetActorRightVector()));
-    if (CharacterAndWallAlignment > 0.7)
-    {
-        return true;
-    }
- 
-    return false;
+    return CharacterAndWallAlignment > 0.7;
 }
 
 void ASRPlayerCharacter::StartWallRun(const FHitResult &Hit)
