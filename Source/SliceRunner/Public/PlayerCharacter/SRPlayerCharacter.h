@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputAction.h"
+#include <cfloat>
 #include "SRPlayerCharacter.generated.h"
+
 
 class UCameraComponent;
 class USRRaycastSensor;
@@ -33,6 +35,12 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent *FirstPersonCameraComponent;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    USRRaycastSensor *RaycastSensorInnerWall;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    USRRaycastSensor *RaycastSensorOuterWall;
+
 #pragma endregion
 
 #pragma region Inputs
@@ -52,6 +60,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     bool CheckForWall(const FHitResult &Hit);
     void StartWallRun(const FHitResult &Hit);
     void StopWallRun();
+    void EvaluateWallRunStateWithWallChecks();
 
     virtual void NotifyHit(
         UPrimitiveComponent *MyComp,
@@ -68,4 +77,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     bool bIsWallRunning = false;
     bool bIsDashing = false;
+    float TimeIntervel = 0.05f;
+    float TimeEsplased = 0.0f;
 };

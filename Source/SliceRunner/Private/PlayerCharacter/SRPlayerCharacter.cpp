@@ -10,6 +10,8 @@
 #include "GameplayTags/SRGameplayTags.h"
 #include "Input/SREnhancedInputComponent.h"
 #include "Debug/DebugHelper.h"
+#include "Components/Raycaster/SRRaycastSensor.h"
+
 
 ASRPlayerCharacter::ASRPlayerCharacter()
 {
@@ -17,20 +19,25 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
     GetCapsuleComponent()->InitCapsuleSize(32.f, 96.f);
 
-    FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
-    FirstPersonMesh->SetupAttachment(GetMesh());
-    FirstPersonMesh->SetOnlyOwnerSee(true);
-    FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-    FirstPersonMesh->SetCollisionProfileName(TEXT("NoCollision"));
-
-    FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-    FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, TEXT("head"));
+    FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-    GetCharacterMovement()->BrakingDecelerationFalling = 1500.f;
-    GetCharacterMovement()->AirControl = 1.f;
-    GetCharacterMovement()->JumpZVelocity = 600.f;
+    FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
+    FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
+    FirstPersonMesh->SetOnlyOwnerSee(true);
+    FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+    FirstPersonCameraComponent->SetupAttachment(GetMesh(), TEXT("head"));
+    FirstPersonMesh->SetCollisionProfileName(TEXT("NoCollision"));
+
+    GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+    GetCharacterMovement()->AirControl = 1.0f;
+    GetCharacterMovement()->JumpZVelocity = 600.0f;
+
+    RaycastSensorInnerWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Inner Wall"));
+    RaycastSensorOuterWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Outer Wall"));
 }
+
 
 // Called when the game starts or when spawned
 void ASRPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
@@ -45,10 +52,17 @@ void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 void ASRPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    //Debug::Print(TEXT("Velocity: "), static_cast<float>(GetVelocity().Length()), 2);
+
+    // use raycast every 100 ms
+    TimeEsplased += DeltaTime;
+    if (TimeEsplased >= TimeIntervel)
+    {
+        EvaluateWallRunStateWithWallChecks();
+        TimeEsplased = 0.0f;
+    }
+
     if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero() && bIsWallRunning)
-    {   
-        //Debug::Print(TEXT("Actor Forward Vector"), GetActorForwardVector(), 1);
+    {
         StopWallRun();
     }
 }
@@ -115,6 +129,10 @@ void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
 
     if (MovementVector.X != 0.0f)
     {
+        if (bIsWallRunning)
+        {
+            StopWallRun();
+        }
         const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
         if (bIsDashing)
         {
@@ -155,9 +173,8 @@ void ASRPlayerCharacter::Input_Jump(const FInputActionValue &InputActionValue)
             FVector PlaneContraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
             // launch character based on its speeed
             const float DashStrength = GetVelocity().Length();
-            float Speed = 1.0f;
-            FVector LaunchZDirection = FVector(0, 0, DashStrength);
-            LaunchCharacter(PlaneContraintNormal * DashStrength * Speed + LaunchZDirection, false, true);
+            FVector UpwardForce = FVector(0, 0, DashStrength);
+            LaunchCharacter(PlaneContraintNormal * DashStrength + UpwardForce, false, true);
         }
         Jump();
     }
@@ -209,10 +226,7 @@ bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
     {
         return true;
     }
-    if (CharacterAndWallAlignment < 0.7)
-    {
-        return false;
-    }
+ 
     return false;
 }
 
@@ -233,6 +247,60 @@ void ASRPlayerCharacter::StopWallRun()
     GetCharacterMovement()->SetPlaneConstraintEnabled(false);
     GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
+
+void ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks()
+{
+    if (!bIsWallRunning)
+    {
+        return;
+    }
+
+    FVector CastOrigin = GetActorLocation();
+
+    auto PerformRayCast = [&CastOrigin](USRRaycastSensor *RaycasterSensor, FVector CastDirection, float Length)
+    {
+        RaycasterSensor->SetCastOrigin(CastOrigin);
+        RaycasterSensor->SetCastDirection(CastDirection);
+        RaycasterSensor->CastLength = Length;
+        RaycasterSensor->Cast(); 
+    };
+
+    FVector CastDirectionInwards = GetActorForwardVector();
+    PerformRayCast(RaycastSensorInnerWall, CastDirectionInwards, 150.0f);
+
+    if (RaycastSensorInnerWall->HasDetectedHit())
+    {
+        // Determine how closely the player's movement direction aligns with the wall surface
+        FVector WallNormal = RaycastSensorInnerWall->GetNormal();
+        float PlayerAndObstacleAlignment = FMath::Abs(FVector::DotProduct(WallNormal, CastDirectionInwards));
+
+        // If alignment is high, player is facing the wall too directly—cancel the wall run
+        if (PlayerAndObstacleAlignment > 0.8 && bIsWallRunning)
+        {
+            StopWallRun();
+
+            // Apply a short directional push away from the wall to keep momentum fluid
+            FVector PlaneConstraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
+            float DashStrength = 400.0f;
+            FVector LateralDashForce = FVector(0.0f, DashStrength, 0.0f);
+            LaunchCharacter(PlaneConstraintNormal * DashStrength + LateralDashForce, true, false);
+        }
+    }
+
+    // Check if player has moved too far away from all side walls (i.e., is no longer adjacent to any wall)
+    PerformRayCast(RaycastSensorOuterWall, GetActorRightVector(), 60.0f);
+    bool bRightClear = !RaycastSensorOuterWall->HasDetectedHit();
+
+    PerformRayCast(RaycastSensorOuterWall, -GetActorRightVector(), 60.0f);
+    bool bLeftClear = !RaycastSensorOuterWall->HasDetectedHit();
+
+    // If both left and right sides are clear, player has lost wall contact—end wall run
+    if (bRightClear && bLeftClear && bIsWallRunning)
+    {
+        StopWallRun();
+    }
+}
+
 
 void ASRPlayerCharacter::NotifyHit(
     UPrimitiveComponent *MyComp,
