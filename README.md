@@ -48,7 +48,6 @@ If you're interested in accessing the complete project (including assets) for ed
 
 - Unreal Engine **5.6**  
 - Written Core Logic in **C++**  
-- Auto-generated and engine boilerplate files are included (build scripts, config)
 
 ---
 
