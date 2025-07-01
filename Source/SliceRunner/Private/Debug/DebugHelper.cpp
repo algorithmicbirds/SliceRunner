@@ -54,4 +54,27 @@ void Print(const FString &Msg, const FVector &InVector, int32 key, FColor Color)
     }
 }
 
+void DrawSweepDebug(
+    UWorld *World,
+    const FVector &Start,
+    const FVector &End,
+    float Radius,
+    const TArray<FHitResult> &Hits,
+    float Duration
+)
+{
+    if (!World)
+        return;
+
+    float LineThickness = 5.0f;
+    DrawDebugSphere(World, End, Radius, 12, FColor::Red, false, Duration);
+    DrawDebugLine(World, Start, End, FColor::Red, false, Duration, 0, LineThickness);
+
+    for (const FHitResult &Hit : Hits)
+    {
+        DrawDebugLine(World, Start, Hit.ImpactPoint, FColor::Yellow, false, Duration, 0, LineThickness);
+        DrawDebugSphere(World, Hit.ImpactPoint, Radius * 1.5f, 12, FColor::Yellow, false, Duration);
+    }
+}
+
 } // namespace Debug

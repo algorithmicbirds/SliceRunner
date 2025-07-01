@@ -51,17 +51,41 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     void Input_Look(const FInputActionValue &InputActionValue);
     void Input_Jump(const FInputActionValue &InputActionValue);
     void Input_Dash(const FInputActionValue &InputActionValue);
+    void Input_Grapple(const FInputActionValue &InputActionValue);
 
 #pragma endregion
 
 #pragma region Actions
     void StartDashing();
     void StopDashing();
+ 
+    UFUNCTION()
+    void OnGrappleHookBeganOverlap(
+        UPrimitiveComponent *OverlappedComponent,
+        AActor *OtherActor,
+        UPrimitiveComponent *OtherComp,
+        int32 OtherBodyIndex,
+        bool bFromSweep,
+        const FHitResult &SweepResult
+    );
+
+    UFUNCTION()
+    void EndGrappleHookOverlap(
+        UPrimitiveComponent *OverlappedComponent,
+        AActor *OtherActor,
+        UPrimitiveComponent *OtherComp,
+        int32 OtherBodyIndex
+    );
+
+    void CheckForGrapplePoints();
+
+#pragma endregion
+
+#pragma region WallRun
     bool CheckForWall(const FHitResult &Hit);
     void StartWallRun(const FHitResult &Hit);
     void StopWallRun();
     void EvaluateWallRunStateWithWallChecks();
-
     virtual void NotifyHit(
         UPrimitiveComponent *MyComp,
         AActor *Other,
@@ -72,11 +96,12 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
         FVector NormalImpulse,
         const FHitResult &Hit
     ) override;
-
 #pragma endregion
+
 
     bool bIsWallRunning = false;
     bool bIsDashing = false;
-    float TimeIntervel = 0.05f;
-    float TimeEsplased = 0.0f;
+    bool bIsGrappleAllowed = false;
+    float WallCheckInterval = 0.05f;
+    float WallCheckTimer = 0.0f;
 };

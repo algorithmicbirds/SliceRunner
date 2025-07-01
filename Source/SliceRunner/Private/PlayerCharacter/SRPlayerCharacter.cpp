@@ -40,7 +40,12 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
 
 // Called when the game starts or when spawned
-void ASRPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
+void ASRPlayerCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASRPlayerCharacter::OnGrappleHookBeganOverlap);
+    GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ASRPlayerCharacter::EndGrappleHookOverlap);
+}
 
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
@@ -53,18 +58,21 @@ void ASRPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // use raycast every 100 ms
-    TimeEsplased += DeltaTime;
-    if (TimeEsplased >= TimeIntervel)
+    // Perform wall check every 100 ms to reduce eraycasts
+    WallCheckTimer += DeltaTime;
+    if (WallCheckTimer >= WallCheckInterval)
     {
+        CheckForGrapplePoints();
         EvaluateWallRunStateWithWallChecks();
-        TimeEsplased = 0.0f;
+        WallCheckTimer = 0.0f;
     }
 
     if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero() && bIsWallRunning)
     {
         StopWallRun();
     }
+
+        
 }
 
 // Called to bind functionality to input
@@ -113,8 +121,17 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
         this,
         &ASRPlayerCharacter::Input_Dash
     );
+
+    SRInputComp->BindNativeInputAction(
+        InputDataAssetConfig,
+        SRGameplayTags::InputTag_Grapple,
+        ETriggerEvent::Triggered,
+        this,
+        &ASRPlayerCharacter::Input_Grapple
+    );
 }
 
+#pragma region Inputs
 void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
 {
     const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
@@ -139,7 +156,10 @@ void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
             const float MoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
             FVector DeltaMove = RightDirection * MovementVector.X * MoveSpeed * GetWorld()->GetDeltaSeconds();
             AddActorWorldOffset(DeltaMove, true);
-            // for making animations work; slowing down time affects movement and slows down input
+            // Use AddMovementInput to trigger character animations correctly.
+            // AddActorWorldOffset only moves the actor in world space and bypasses the animation system.
+            // Note: If time is slowed down, relying solely on AddMovementInput may result in slower movement.
+            // Combining both ensures visual correctness and consistent movement behavior.
             AddMovementInput(RightDirection, MovementVector.X * 0.1);
         }
         else
@@ -170,6 +190,7 @@ void ASRPlayerCharacter::Input_Jump(const FInputActionValue &InputActionValue)
         if (bIsWallRunning)
         {
             StopWallRun();
+            Debug::Print("Jump DuringWallRun");
             FVector PlaneContraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
             // launch character based on its speeed
             const float DashStrength = GetVelocity().Length();
@@ -196,6 +217,11 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue &InputActionValue)
     }
 }
 
+void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue)
+{CheckForGrapplePoints();
+}
+
+#pragma endregion
 void ASRPlayerCharacter::StartDashing()
 {
     if (bIsWallRunning)
@@ -213,12 +239,59 @@ void ASRPlayerCharacter::StopDashing()
 {
     bIsDashing = false;
     UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
-    const FRotator ControlRot(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
-    const FVector ForwardDir = ControlRot.Vector();
-    const float DashStrength = 1500.f;
-    LaunchCharacter(ForwardDir * DashStrength, true, true);
+    const FVector DashDir = Controller->GetControlRotation().Vector();
+    const float DashStrength = 1000.f;
+    LaunchCharacter(DashDir * DashStrength, true, true);
 }
 
+
+void ASRPlayerCharacter::OnGrappleHookBeganOverlap(
+    UPrimitiveComponent *OverlappedComponent,
+    AActor *OtherActor,
+    UPrimitiveComponent *OtherComp,
+    int32 OtherBodyIndex,
+    bool bFromSweep,
+    const FHitResult &SweepResult
+)
+{
+    Debug::Print("On component began overlap");
+    bIsGrappleAllowed = true;
+}
+
+void ASRPlayerCharacter::EndGrappleHookOverlap(
+    UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex
+)
+{
+    Debug::Print("On copmpoent end overlap");
+    bIsGrappleAllowed = false;
+}
+
+void ASRPlayerCharacter::CheckForGrapplePoints()
+{
+    if (!bIsGrappleAllowed)
+        return;
+    float TraceRadius = 50.0f;
+    TArray<FHitResult> OutHits;
+    FVector Start = GetActorLocation();
+    FVector End = Start + GetControlRotation().Vector() * 1000.0f;
+    FCollisionQueryParams QueryParam;
+    QueryParam.AddIgnoredActor(this);
+
+    FCollisionObjectQueryParams ObjectQueryParams;
+    ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
+
+
+    bool bHit = GetWorld()->SweepMultiByObjectType(
+        OutHits, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), QueryParam
+    );
+
+    Debug::DrawSweepDebug(GetWorld(), Start, End, TraceRadius, OutHits);
+}
+
+
+
+
+#pragma region WallRun
 bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
 {
     float CharacterAndWallAlignment = FMath::Abs(FVector::DotProduct(Hit.ImpactNormal, GetActorRightVector()));
@@ -296,7 +369,6 @@ void ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks()
     }
 }
 
-
 void ASRPlayerCharacter::NotifyHit(
     UPrimitiveComponent *MyComp,
     AActor *Other,
@@ -317,3 +389,5 @@ void ASRPlayerCharacter::NotifyHit(
         StopWallRun();
     }
 }
+
+#pragma endregion
