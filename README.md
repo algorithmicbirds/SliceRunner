@@ -1,33 +1,62 @@
 # SliceRunner
 
-**SliceRunner** is a personal Unreal Engine project, currently under development.  
-It focuses on fast-paced parkour movement, wall-running, and precision combat inspired by *Ghostrunner*.
+**SliceRunner** is a personal Unreal Engine project currently in development.  
+It features fast-paced parkour movement, wall-running, and precision melee combat inspired by *Ghostrunner*.
 
-## 🚧 Status
+---
 
-This project is **under construction**. Features and systems are still being built and tested.
+## 🚧 Project Status
 
-## ⚙️ Goals
+**In Development** — Core systems and mechanics are actively being built and tested.
 
-- High-speed parkour-style movement  
-- Wall-running and sliding mechanics  
+---
+
+## ⚙️ Project Goals
+
+- High-speed parkour-style locomotion  
+- Wall-running, sliding, and traversal mechanics  
 - One-hit melee combat  
-- Tight first-person control  
+- Tight first-person controls using C++  
+
+---
 
 ## 📂 Repository Info
 
-- **Code**: Open-source under the [MIT License](LICENSE)  
-- **Assets**: Not included — stored in a private submodule due to licensing (includes Epic default and Marketplace content)
+| Type            | Included            | License                     |
+|-----------------|---------------------|-----------------------------|
+| Source Code     | ✅ Yes               | [MIT License](LICENSE)      |
+| Engine Build Files | ✅ Yes            | Unreal Engine EULA          |
+| Assets  | ❌ No – Private Submodule | Unreal Engine EULA          |
 
-## 🔐 Need Full Project?
+> ⚠️ **Note**: This repository does not include any Unreal assets.  
+> Assets such as Starter Content and Marketplace content are stored in a private submodule and are **not open source**.
 
-For educational access to the full project (including assets), contact me on Discord:  
-[algorithmicbird](https://discord.com/users/1312254176503402517)
+---
 
-> ⚠️ Asset use is subject to the Unreal Engine EULA. Marketplace and Epic assets cannot be publicly redistributed.
+## 🔐 Full Project Access
 
-## 📌 Notes
+If you're interested in accessing the complete project (including assets) for educational or non-commercial purposes:
 
-- Unreal Engine 5.6 project  
-- Written in C++  
-- Uses both Epic default and Marketplace assets (not open source)
+- Contact me on Discord: [algorithmicbird](https://discord.com/users/1312254176503402517)
+
+> Assets are bound by the [Unreal Engine EULA](https://www.unrealengine.com/en-US/eula).  
+> Redistribution of Epic or Marketplace content is not permitted.
+
+---
+
+## 🛠️ Overview
+
+- Unreal Engine **5.6**  
+- Written Core Logic in **C++**  
+- Auto-generated and engine boilerplate files are included (build scripts, config)
+
+---
+
+## 📝 Licensing Notes
+
+- All original source code is MIT licensed.
+- Files generated or required by Unreal (e.g., `*.Target.cs`, `*.Build.cs`, `.uproject`, config files) fall under the **Unreal Engine EULA**.
+- Epic and Marketplace content is excluded from this repository and not redistributed.
+
+---
+  
