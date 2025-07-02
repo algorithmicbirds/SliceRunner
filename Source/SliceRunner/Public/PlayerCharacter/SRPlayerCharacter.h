@@ -12,6 +12,7 @@
 class UCameraComponent;
 class USRRaycastSensor;
 class USRDataAsset_InputConfig;
+class ASRGrapplePoint; 
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
@@ -40,6 +41,9 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     USRRaycastSensor *RaycastSensorOuterWall;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    ASRGrapplePoint *GrapplePoint;
 
 #pragma endregion
 

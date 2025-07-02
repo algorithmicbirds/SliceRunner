@@ -11,6 +11,7 @@
 #include "Input/SREnhancedInputComponent.h"
 #include "Debug/DebugHelper.h"
 #include "Components/Raycaster/SRRaycastSensor.h"
+#include "UI/GrapplePoint/SRGrapplePoint.h"
 
 
 ASRPlayerCharacter::ASRPlayerCharacter()
@@ -36,6 +37,7 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
     RaycastSensorInnerWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Inner Wall"));
     RaycastSensorOuterWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Outer Wall"));
+    GrapplePoint = CreateDefaultSubobject<ASRGrapplePoint>(TEXT("Grapple Point"));
 }
 
 
@@ -270,6 +272,7 @@ void ASRPlayerCharacter::CheckForGrapplePoints()
 {
     if (!bIsGrappleAllowed)
         return;
+
     float TraceRadius = 50.0f;
     TArray<FHitResult> OutHits;
     FVector Start = GetActorLocation();
@@ -280,12 +283,27 @@ void ASRPlayerCharacter::CheckForGrapplePoints()
     FCollisionObjectQueryParams ObjectQueryParams;
     ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
 
-
     bool bHit = GetWorld()->SweepMultiByObjectType(
         OutHits, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), QueryParam
     );
 
-    Debug::DrawSweepDebug(GetWorld(), Start, End, TraceRadius, OutHits);
+    if (GrapplePoint)
+    {
+        GrapplePoint->SetGrappleIconVisible(false);
+        GrapplePoint = nullptr;
+    }
+
+    for (const FHitResult &Hit : OutHits)
+    {
+        ASRGrapplePoint *HitPoint = Cast<ASRGrapplePoint>(Hit.GetActor());
+        if (HitPoint)
+        {
+            HitPoint->SetGrappleIconVisible(true);
+            GrapplePoint = HitPoint; 
+    
+        break;                   
+        }
+    }
 }
 
 
