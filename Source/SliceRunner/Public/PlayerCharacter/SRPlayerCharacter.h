@@ -13,6 +13,7 @@ class UCameraComponent;
 class USRRaycastSensor;
 class USRDataAsset_InputConfig;
 class ASRGrapplePoint; 
+class UCableComponent;
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
@@ -44,6 +45,9 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     ASRGrapplePoint *GrapplePoint;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UCableComponent *CableComponent;
 
 #pragma endregion
 
@@ -81,7 +85,10 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
         int32 OtherBodyIndex
     );
 
-    void CheckForGrapplePoints();
+    FHitResult CheckForGrapplePoints();
+
+    void Grapple(FHitResult HitResult);
+    void ResetGrappleState();
 
 #pragma endregion
 
@@ -106,6 +113,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     bool bIsWallRunning = false;
     bool bIsDashing = false;
     bool bIsGrappleAllowed = false;
+    bool bIsGrappling = false;
     float WallCheckInterval = 0.05f;
     float WallCheckTimer = 0.0f;
 };

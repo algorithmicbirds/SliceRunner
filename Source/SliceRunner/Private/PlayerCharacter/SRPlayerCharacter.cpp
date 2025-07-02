@@ -12,6 +12,7 @@
 #include "Debug/DebugHelper.h"
 #include "Components/Raycaster/SRRaycastSensor.h"
 #include "UI/GrapplePoint/SRGrapplePoint.h"
+#include "CableComponent.h"
 
 
 ASRPlayerCharacter::ASRPlayerCharacter()
@@ -38,6 +39,9 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     RaycastSensorInnerWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Inner Wall"));
     RaycastSensorOuterWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Outer Wall"));
     GrapplePoint = CreateDefaultSubobject<ASRGrapplePoint>(TEXT("Grapple Point"));
+    CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("Cable Component"));
+    CableComponent->SetupAttachment(GetMesh(), TEXT("wrist_inner_r"));
+    CableComponent->SetVisibility(false);
 }
 
 
@@ -220,7 +224,16 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue &InputActionValue)
 }
 
 void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue)
-{CheckForGrapplePoints();
+{
+    if (InputActionValue.Get<bool>())
+    {
+        FHitResult Results = CheckForGrapplePoints();
+        Grapple(Results);
+    }
+    else
+    {
+        ResetGrappleState();
+    }
 }
 
 #pragma endregion
@@ -268,15 +281,16 @@ void ASRPlayerCharacter::EndGrappleHookOverlap(
     bIsGrappleAllowed = false;
 }
 
-void ASRPlayerCharacter::CheckForGrapplePoints()
+FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
 {
     if (!bIsGrappleAllowed)
-        return;
+        return FHitResult();
 
     float TraceRadius = 50.0f;
-    TArray<FHitResult> OutHits;
     FVector Start = GetActorLocation();
     FVector End = Start + GetControlRotation().Vector() * 1000.0f;
+
+    TArray<FHitResult> OutHits;
     FCollisionQueryParams QueryParam;
     QueryParam.AddIgnoredActor(this);
 
@@ -287,6 +301,7 @@ void ASRPlayerCharacter::CheckForGrapplePoints()
         OutHits, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), QueryParam
     );
 
+    // Hide previous grapple icon
     if (GrapplePoint)
     {
         GrapplePoint->SetGrappleIconVisible(false);
@@ -299,11 +314,36 @@ void ASRPlayerCharacter::CheckForGrapplePoints()
         if (HitPoint)
         {
             HitPoint->SetGrappleIconVisible(true);
-            GrapplePoint = HitPoint; 
-    
-        break;                   
+            GrapplePoint = HitPoint;
+
+            return Hit;
         }
     }
+
+    return FHitResult();
+}
+
+
+void ASRPlayerCharacter::Grapple(FHitResult HitResult) {
+    bIsGrappling = true;
+    CableComponent->SetVisibility(true);
+    GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    FVector PushTowardGrapple = GetControlRotation().Vector() * 10000.0f;
+    FVector HitPoint = HitResult.ImpactPoint;
+    if (AActor* HitActor = HitResult.GetActor())
+    {
+        Debug::Print(HitActor->GetName());
+        CableComponent->SetAttachEndTo(HitActor, NAME_None);
+        CableComponent->EndLocation = FVector::ZeroVector;
+    }
+    GetCharacterMovement()->AddForce(PushTowardGrapple);
+}
+
+void ASRPlayerCharacter::ResetGrappleState() { 
+    bIsGrappling = false;
+    CableComponent->SetVisibility(false);
+    GetCharacterMovement()->SetMovementMode(MOVE_Falling); 
+    CableComponent->SetAttachEndTo(nullptr, NAME_None);
 }
 
 
