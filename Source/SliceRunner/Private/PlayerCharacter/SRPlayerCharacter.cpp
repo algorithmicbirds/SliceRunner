@@ -51,6 +51,7 @@ void ASRPlayerCharacter::BeginPlay()
     Super::BeginPlay();
     GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASRPlayerCharacter::OnGrappleHookBeganOverlap);
     GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ASRPlayerCharacter::EndGrappleHookOverlap);
+
 }
 
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
@@ -64,7 +65,7 @@ void ASRPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Perform wall check every 100 ms to reduce eraycasts
+    // Perform wall check every 100 ms to reduce raycasts
     WallCheckTimer += DeltaTime;
     if (WallCheckTimer >= WallCheckInterval)
     {
@@ -77,8 +78,23 @@ void ASRPlayerCharacter::Tick(float DeltaTime)
     {
         StopWallRun();
     }
-
         
+    if (bIsGrappling)
+    {
+        FVector ToTarget = CurrentGrappleTarget - GetActorLocation();
+        float Distance = ToTarget.Size();
+
+        if (Distance < 200.f)
+        {
+            ResetGrappleState();
+        }
+        else
+        {
+            FVector Direction = ToTarget.GetSafeNormal();
+            float GrappleSpeed = 2000.f;
+            GetCharacterMovement()->Velocity = Direction * GrappleSpeed;
+        }
+    }
 }
 
 // Called to bind functionality to input
@@ -278,7 +294,7 @@ void ASRPlayerCharacter::EndGrappleHookOverlap(
 )
 {
     Debug::Print("On copmpoent end overlap");
-    bIsGrappleAllowed = false;
+    bIsGrappleAllowed = true;
 }
 
 FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
@@ -288,7 +304,8 @@ FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
 
     float TraceRadius = 50.0f;
     FVector Start = GetActorLocation();
-    FVector End = Start + GetControlRotation().Vector() * 1000.0f;
+    float TraceDistance = 1200.0f;
+    FVector End = Start + GetControlRotation().Vector() * TraceDistance;
 
     TArray<FHitResult> OutHits;
     FCollisionQueryParams QueryParam;
@@ -324,26 +341,37 @@ FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
 }
 
 
-void ASRPlayerCharacter::Grapple(FHitResult HitResult) {
-    bIsGrappling = true;
-    CableComponent->SetVisibility(true);
-    GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-    FVector PushTowardGrapple = GetControlRotation().Vector() * 10000.0f;
-    FVector HitPoint = HitResult.ImpactPoint;
-    if (AActor* HitActor = HitResult.GetActor())
+
+void ASRPlayerCharacter::Grapple(const FHitResult &HitResult)
+{
+    if (!HitResult.bBlockingHit)
+        return;
+
+    if (AActor *HitActor = HitResult.GetActor())
     {
-        Debug::Print(HitActor->GetName());
         CableComponent->SetAttachEndTo(HitActor, NAME_None);
         CableComponent->EndLocation = FVector::ZeroVector;
     }
-    GetCharacterMovement()->AddForce(PushTowardGrapple);
+
+    bIsGrappling = true;
+    CurrentGrappleTarget = HitResult.ImpactPoint;
+
+    GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    GetCharacterMovement()->StopMovementImmediately();
+    GetCharacterMovement()->GravityScale = 0.f;
+
+    CableComponent->SetVisibility(true);
 }
 
-void ASRPlayerCharacter::ResetGrappleState() { 
+
+void ASRPlayerCharacter::ResetGrappleState()
+{
     bIsGrappling = false;
     CableComponent->SetVisibility(false);
-    GetCharacterMovement()->SetMovementMode(MOVE_Falling); 
     CableComponent->SetAttachEndTo(nullptr, NAME_None);
+
+    GetCharacterMovement()->GravityScale = 1.0f;
+    GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 }
 
 

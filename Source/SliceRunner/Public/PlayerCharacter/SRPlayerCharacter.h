@@ -87,7 +87,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     FHitResult CheckForGrapplePoints();
 
-    void Grapple(FHitResult HitResult);
+    void Grapple(const FHitResult &HitResult);
     void ResetGrappleState();
 
 #pragma endregion
@@ -116,4 +116,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     bool bIsGrappling = false;
     float WallCheckInterval = 0.05f;
     float WallCheckTimer = 0.0f;
+    FVector CurrentGrappleTarget;
+    FTimerHandle GrappleDetachTimer;
 };
