@@ -46,13 +46,7 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
 
 // Called when the game starts or when spawned
-void ASRPlayerCharacter::BeginPlay()
-{
-    Super::BeginPlay();
-    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASRPlayerCharacter::OnGrappleHookBeganOverlap);
-    GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ASRPlayerCharacter::EndGrappleHookOverlap);
-
-}
+void ASRPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
 
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
@@ -275,28 +269,6 @@ void ASRPlayerCharacter::StopDashing()
     LaunchCharacter(DashDir * DashStrength, true, true);
 }
 
-
-void ASRPlayerCharacter::OnGrappleHookBeganOverlap(
-    UPrimitiveComponent *OverlappedComponent,
-    AActor *OtherActor,
-    UPrimitiveComponent *OtherComp,
-    int32 OtherBodyIndex,
-    bool bFromSweep,
-    const FHitResult &SweepResult
-)
-{
-    Debug::Print("On component began overlap");
-    bIsGrappleAllowed = true;
-}
-
-void ASRPlayerCharacter::EndGrappleHookOverlap(
-    UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex
-)
-{
-    Debug::Print("On copmpoent end overlap");
-    bIsGrappleAllowed = true;
-}
-
 FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
 {
     if (!bIsGrappleAllowed)
@@ -476,4 +448,14 @@ void ASRPlayerCharacter::NotifyHit(
     }
 }
 
+
 #pragma endregion
+
+void ASRPlayerCharacter::SetZoneFlags(const FZoneAbilityFlags &InFlags)
+{
+    CurrentZoneFlags = InFlags;
+    bIsGrappleAllowed = InFlags.Has(EZoneAbility::CanGrapple);
+}
+
+
+void ASRPlayerCharacter::ClearZoneFlags() { SetZoneFlags(FZoneAbilityFlags{}); }

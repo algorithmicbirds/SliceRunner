@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputAction.h"
+#include "Interfaces/Zones/ZoneRuleInterface.h"
 #include <cfloat>
 #include "SRPlayerCharacter.generated.h"
 
@@ -66,25 +67,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 #pragma region Actions
     void StartDashing();
     void StopDashing();
- 
-    UFUNCTION()
-    void OnGrappleHookBeganOverlap(
-        UPrimitiveComponent *OverlappedComponent,
-        AActor *OtherActor,
-        UPrimitiveComponent *OtherComp,
-        int32 OtherBodyIndex,
-        bool bFromSweep,
-        const FHitResult &SweepResult
-    );
-
-    UFUNCTION()
-    void EndGrappleHookOverlap(
-        UPrimitiveComponent *OverlappedComponent,
-        AActor *OtherActor,
-        UPrimitiveComponent *OtherComp,
-        int32 OtherBodyIndex
-    );
-
     FHitResult CheckForGrapplePoints();
 
     void Grapple(const FHitResult &HitResult);
@@ -110,6 +92,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 #pragma endregion
 
 
+
     bool bIsWallRunning = false;
     bool bIsDashing = false;
     bool bIsGrappleAllowed = false;
@@ -118,4 +101,9 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     float WallCheckTimer = 0.0f;
     FVector CurrentGrappleTarget;
     FTimerHandle GrappleDetachTimer;
+
+  public:
+    void SetZoneFlags(const FZoneAbilityFlags &InFlags);
+    void ClearZoneFlags();
+    FZoneAbilityFlags CurrentZoneFlags;
 };
