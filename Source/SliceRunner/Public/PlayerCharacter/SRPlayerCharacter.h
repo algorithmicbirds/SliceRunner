@@ -9,11 +9,10 @@
 #include <cfloat>
 #include "SRPlayerCharacter.generated.h"
 
-
 class UCameraComponent;
 class USRRaycastSensor;
 class USRDataAsset_InputConfig;
-class ASRGrapplePoint; 
+class ASRGrapplePoint;
 class UCableComponent;
 
 UCLASS()
@@ -25,10 +24,21 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     ASRPlayerCharacter();
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
+    void SetGateAbilityFlags(const FGateAbilityFlags &InFlags);
 
   protected:
     virtual void BeginPlay() override;
     virtual void Landed(const FHitResult &Hit) override;
+    virtual void NotifyHit(
+        UPrimitiveComponent *MyComp,
+        AActor *Other,
+        UPrimitiveComponent *OtherComp,
+        bool bSelfMoved,
+        FVector HitLocation,
+        FVector HitNormal,
+        FVector NormalImpulse,
+        const FHitResult &Hit
+    ) override;
 
   private:
 #pragma region Components
@@ -43,9 +53,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     USRRaycastSensor *RaycastSensorOuterWall;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    ASRGrapplePoint *GrapplePoint;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCableComponent *CableComponent;
@@ -64,14 +71,25 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
 #pragma endregion
 
-#pragma region Actions
+#pragma region Dash
     void StartDashing();
     void StopDashing();
+    bool bIsDashing = false;
+#pragma endregion
+
+#pragma region Grapple
     FHitResult CheckForGrapplePoints();
-
     void Grapple(const FHitResult &HitResult);
+    void UpdateGrappleMovement();
     void ResetGrappleState();
-
+    void UpdateGrappleCheckTimer();
+    bool bIsGrappleAllowed = false;
+    bool bIsGrappling = false;
+    ASRGrapplePoint *GrapplePoint = nullptr;
+    FVector CurrentGrappleTarget;
+    FTimerHandle GrappleCheckTimerHandle;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+    float GrappleSpeed = 2000.0f;
 #pragma endregion
 
 #pragma region WallRun
@@ -79,30 +97,22 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     void StartWallRun(const FHitResult &Hit);
     void StopWallRun();
     void EvaluateWallRunStateWithWallChecks();
-    virtual void NotifyHit(
-        UPrimitiveComponent *MyComp,
-        AActor *Other,
-        UPrimitiveComponent *OtherComp,
-        bool bSelfMoved,
-        FVector HitLocation,
-        FVector HitNormal,
-        FVector NormalImpulse,
-        const FHitResult &Hit
-    ) override;
+    void CheckWallRunEndDueToNoMovement();
+    bool bIsWallRunning = false;
+    FTimerHandle WallRunCheckTimerHandle;
+    FTimerHandle WallRunMovementCheckHandle;
 #pragma endregion
 
-
-
-    bool bIsWallRunning = false;
-    bool bIsDashing = false;
-    bool bIsGrappleAllowed = false;
-    bool bIsGrappling = false;
-    float WallCheckInterval = 0.05f;
-    float WallCheckTimer = 0.0f;
-    FVector CurrentGrappleTarget;
-    FTimerHandle GrappleDetachTimer;
+  private:
+    FGateAbilityFlags CurrentZoneFlags;
 
   public:
-    void SetGateAbilityFlags(const FGateAbilityFlags &InFlags);
-    FGateAbilityFlags CurrentZoneFlags;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+    float JumpVelocity = 600.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+    float AirControl = 1.0f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+    float FallingBrakingDeceleration = 1500.0f;
 };

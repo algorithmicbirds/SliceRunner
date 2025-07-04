@@ -19,30 +19,30 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    GetCapsuleComponent()->InitCapsuleSize(32.f, 96.f);
+    GetCapsuleComponent()->InitCapsuleSize(32.0f, 96.0f);
 
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-    FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+    FirstPersonCameraComponent->SetupAttachment(GetMesh(), TEXT("head"));
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
     FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
     FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
     FirstPersonMesh->SetOnlyOwnerSee(true);
-    FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-    FirstPersonCameraComponent->SetupAttachment(GetMesh(), TEXT("head"));
     FirstPersonMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
-    GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-    GetCharacterMovement()->AirControl = 1.0f;
-    GetCharacterMovement()->JumpZVelocity = 600.0f;
+    GetCharacterMovement()->BrakingDecelerationFalling = FallingBrakingDeceleration;
+    GetCharacterMovement()->AirControl = AirControl;
+    GetCharacterMovement()->JumpZVelocity = JumpVelocity;
 
-    RaycastSensorInnerWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Inner Wall"));
-    RaycastSensorOuterWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensor Outer Wall"));
-    GrapplePoint = CreateDefaultSubobject<ASRGrapplePoint>(TEXT("Grapple Point"));
-    CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("Cable Component"));
+    RaycastSensorInnerWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensorInnerWall"));
+    RaycastSensorOuterWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensorOuterWall"));
+
+    CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("CableComponent"));
     CableComponent->SetupAttachment(GetMesh(), TEXT("wrist_inner_r"));
     CableComponent->SetVisibility(false);
+
 }
+
 
 
 // Called when the game starts or when spawned
@@ -59,35 +59,9 @@ void ASRPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Perform wall check every 100 ms to reduce raycasts
-    WallCheckTimer += DeltaTime;
-    if (WallCheckTimer >= WallCheckInterval)
-    {
-        CheckForGrapplePoints();
-        EvaluateWallRunStateWithWallChecks();
-        WallCheckTimer = 0.0f;
-    }
-
-    if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero() && bIsWallRunning)
-    {
-        StopWallRun();
-    }
-        
     if (bIsGrappling)
     {
-        FVector ToTarget = CurrentGrappleTarget - GetActorLocation();
-        float Distance = ToTarget.Size();
-
-        if (Distance < 200.f)
-        {
-            ResetGrappleState();
-        }
-        else
-        {
-            FVector Direction = ToTarget.GetSafeNormal();
-            float GrappleSpeed = 2000.f;
-            GetCharacterMovement()->Velocity = Direction * GrappleSpeed;
-        }
+        UpdateGrappleMovement();
     }
 }
 
@@ -145,6 +119,13 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
         this,
         &ASRPlayerCharacter::Input_Grapple
     );
+}
+
+void ASRPlayerCharacter::SetGateAbilityFlags(const FGateAbilityFlags &InFlags)
+{
+    CurrentZoneFlags = InFlags;
+    bIsGrappleAllowed = InFlags.bCanGrapple;
+    UpdateGrappleCheckTimer();
 }
 
 #pragma region Inputs
@@ -247,6 +228,8 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 }
 
 #pragma endregion
+
+#pragma region Dash
 void ASRPlayerCharacter::StartDashing()
 {
     if (bIsWallRunning)
@@ -265,10 +248,12 @@ void ASRPlayerCharacter::StopDashing()
     bIsDashing = false;
     UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
     const FVector DashDir = Controller->GetControlRotation().Vector();
-    const float DashStrength = 1000.f;
+    const float DashStrength = 1000.0f;
     LaunchCharacter(DashDir * DashStrength, true, true);
 }
+#pragma endregion
 
+#pragma region Grapple
 FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
 {
     if (!bIsGrappleAllowed)
@@ -312,8 +297,6 @@ FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
     return FHitResult();
 }
 
-
-
 void ASRPlayerCharacter::Grapple(const FHitResult &HitResult)
 {
     if (!HitResult.bBlockingHit)
@@ -335,6 +318,21 @@ void ASRPlayerCharacter::Grapple(const FHitResult &HitResult)
     CableComponent->SetVisibility(true);
 }
 
+void ASRPlayerCharacter::UpdateGrappleMovement()
+{
+    FVector ToTarget = CurrentGrappleTarget - GetActorLocation();
+    float Distance = ToTarget.Size();
+
+    if (Distance < 200.f)
+    {
+        ResetGrappleState();
+    }
+    else
+    {
+        FVector Direction = ToTarget.GetSafeNormal();
+        GetCharacterMovement()->Velocity = Direction * GrappleSpeed;
+    }
+}
 
 void ASRPlayerCharacter::ResetGrappleState()
 {
@@ -347,7 +345,20 @@ void ASRPlayerCharacter::ResetGrappleState()
 }
 
 
-
+void ASRPlayerCharacter::UpdateGrappleCheckTimer()
+{
+    if (bIsGrappleAllowed)
+    {
+        GetWorldTimerManager().SetTimer(
+            GrappleCheckTimerHandle, FTimerDelegate::CreateLambda([this]() { CheckForGrapplePoints(); }), 0.1f, true
+        );
+    }
+    else
+    {
+        GetWorldTimerManager().ClearTimer(GrappleCheckTimerHandle);
+    }
+}
+#pragma endregion
 
 #pragma region WallRun
 bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
@@ -365,6 +376,13 @@ void ASRPlayerCharacter::StartWallRun(const FHitResult &Hit)
         GetCharacterMovement()->SetPlaneConstraintEnabled(true);
         GetCharacterMovement()->SetPlaneConstraintNormal(Hit.ImpactNormal);
     }
+
+    GetWorldTimerManager().SetTimer(
+        WallRunCheckTimerHandle, this, &ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks, 0.1f, true
+    );
+    GetWorldTimerManager().SetTimer(
+        WallRunMovementCheckHandle, this, &ASRPlayerCharacter::CheckWallRunEndDueToNoMovement, 0.1f, true
+    );
 }
 
 void ASRPlayerCharacter::StopWallRun()
@@ -372,6 +390,8 @@ void ASRPlayerCharacter::StopWallRun()
     bIsWallRunning = false;
     GetCharacterMovement()->SetPlaneConstraintEnabled(false);
     GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+    GetWorldTimerManager().ClearTimer(WallRunCheckTimerHandle);
+    GetWorldTimerManager().ClearTimer(WallRunMovementCheckHandle);
 }
 
 void ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks()
@@ -388,7 +408,7 @@ void ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks()
         RaycasterSensor->SetCastOrigin(CastOrigin);
         RaycasterSensor->SetCastDirection(CastDirection);
         RaycasterSensor->CastLength = Length;
-        RaycasterSensor->Cast(); 
+        RaycasterSensor->DebugCast(); 
     };
 
     FVector CastDirectionInwards = GetActorForwardVector();
@@ -427,6 +447,18 @@ void ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks()
     }
 }
 
+void ASRPlayerCharacter::CheckWallRunEndDueToNoMovement()
+{
+    if (!bIsWallRunning)
+        return;
+
+    if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero())
+    {
+        StopWallRun();
+    }
+}
+
+
 void ASRPlayerCharacter::NotifyHit(
     UPrimitiveComponent *MyComp,
     AActor *Other,
@@ -450,9 +482,3 @@ void ASRPlayerCharacter::NotifyHit(
 
 
 #pragma endregion
-
-void ASRPlayerCharacter::SetGateAbilityFlags(const FGateAbilityFlags &InFlags)
-{
-    CurrentZoneFlags = InFlags;
-    bIsGrappleAllowed = InFlags.bCanGrapple;
-}
