@@ -451,11 +451,8 @@ void ASRPlayerCharacter::NotifyHit(
 
 #pragma endregion
 
-void ASRPlayerCharacter::SetZoneFlags(const FZoneAbilityFlags &InFlags)
+void ASRPlayerCharacter::SetGateAbilityFlags(const FGateAbilityFlags &InFlags)
 {
     CurrentZoneFlags = InFlags;
-    bIsGrappleAllowed = InFlags.Has(EZoneAbility::CanGrapple);
+    bIsGrappleAllowed = InFlags.bCanGrapple;
 }
-
-
-void ASRPlayerCharacter::ClearZoneFlags() { SetZoneFlags(FZoneAbilityFlags{}); }

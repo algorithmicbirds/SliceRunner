@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputAction.h"
-#include "Interfaces/Zones/ZoneRuleInterface.h"
+#include "Interfaces/Gate/GateRuleInterface.h"
 #include <cfloat>
 #include "SRPlayerCharacter.generated.h"
 
@@ -103,7 +103,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     FTimerHandle GrappleDetachTimer;
 
   public:
-    void SetZoneFlags(const FZoneAbilityFlags &InFlags);
-    void ClearZoneFlags();
-    FZoneAbilityFlags CurrentZoneFlags;
+    void SetGateAbilityFlags(const FGateAbilityFlags &InFlags);
+    FGateAbilityFlags CurrentZoneFlags;
 };

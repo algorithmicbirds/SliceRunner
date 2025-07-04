@@ -4,33 +4,33 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Interfaces/Zones/ZoneRuleInterface.h"
-#include "SRZoneBase.generated.h"
+#include "Interfaces/Gate/GateRuleInterface.h"
+#include "SRGateBase.generated.h"
 
 class UBoxComponent;
 
 UCLASS()
-class SLICERUNNER_API ASRZoneBase : public AActor, public IZoneRuleInterface
+class SLICERUNNER_API ASRGateBase : public AActor, public IGateRuleInterface
 {
     GENERATED_BODY()
 
   public:
-    // Sets default values for this actor's properties
-    ASRZoneBase();
-    UPROPERTY(EditAnywhere)
-    FZoneAbilityFlags AbilityFlags;
+    ASRGateBase();
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate Ability")
+    FGateAbilityFlags AbilityFlags;
 
   protected:
-    // Called when the game starts or when spawned
     virtual void BeginPlay() override;
-    UPROPERTY(VisibleAnywhere)
-    UBoxComponent *ZoneTrigger;
-  public:
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
-    virtual const FZoneAbilityFlags &GetZoneAbilities() const override;
 
-    private:
+    UPROPERTY(VisibleAnywhere)
+    UBoxComponent *GateTrigger;
+
+  public:
+    virtual void Tick(float DeltaTime) override;
+    virtual const FGateAbilityFlags &GetGateAbilities() const override;
+
+  private:
     UFUNCTION()
     void OnOverlapBegin(
         UPrimitiveComponent *OverlappedComp,
