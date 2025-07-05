@@ -10,10 +10,10 @@
 #include "SRPlayerCharacter.generated.h"
 
 class UCameraComponent;
-class USRRaycastSensor;
 class USRDataAsset_InputConfig;
 class ASRGrapplePoint;
 class UCableComponent;
+class USRWallRunComponent;
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
@@ -48,14 +48,12 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent *FirstPersonCameraComponent;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USRRaycastSensor *RaycastSensorInnerWall;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USRRaycastSensor *RaycastSensorOuterWall;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCableComponent *CableComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    USRWallRunComponent *WallRunComponent;
 
 #pragma endregion
 
@@ -90,17 +88,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     FTimerHandle GrappleCheckTimerHandle;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
     float GrappleSpeed = 2000.0f;
-#pragma endregion
-
-#pragma region WallRun
-    bool CheckForWall(const FHitResult &Hit);
-    void StartWallRun(const FHitResult &Hit);
-    void StopWallRun();
-    void EvaluateWallRunStateWithWallChecks();
-    void CheckWallRunEndDueToNoMovement();
-    bool bIsWallRunning = false;
-    FTimerHandle WallRunCheckTimerHandle;
-    FTimerHandle WallRunMovementCheckHandle;
 #pragma endregion
 
   private:

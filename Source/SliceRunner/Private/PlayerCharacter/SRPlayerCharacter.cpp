@@ -10,8 +10,8 @@
 #include "GameplayTags/SRGameplayTags.h"
 #include "Input/SREnhancedInputComponent.h"
 #include "Debug/DebugHelper.h"
-#include "Components/Raycaster/SRRaycastSensor.h"
 #include "UI/GrapplePoint/SRGrapplePoint.h"
+#include "Abilities/WallRun/SRWallRunComponent.h"
 #include "CableComponent.h"
 
 
@@ -34,13 +34,11 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->JumpZVelocity = JumpVelocity;
 
-    RaycastSensorInnerWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensorInnerWall"));
-    RaycastSensorOuterWall = CreateDefaultSubobject<USRRaycastSensor>(TEXT("RaycastSensorOuterWall"));
-
     CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("CableComponent"));
     CableComponent->SetupAttachment(GetMesh(), TEXT("wrist_inner_r"));
     CableComponent->SetVisibility(false);
 
+    WallRunComponent = CreateDefaultSubobject<USRWallRunComponent>("WallRunComponent");
 }
 
 
@@ -51,7 +49,7 @@ void ASRPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
     Super::Landed(Hit);
-    StopWallRun();
+    WallRunComponent->StopWallRun();
 }
 
 // Called every frame
@@ -143,9 +141,9 @@ void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
 
     if (MovementVector.X != 0.0f)
     {
-        if (bIsWallRunning)
+        if (WallRunComponent->IsWallRunning())
         {
-            StopWallRun();
+            WallRunComponent->StopWallRun();
         }
         const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
         if (bIsDashing)
@@ -184,9 +182,9 @@ void ASRPlayerCharacter::Input_Jump(const FInputActionValue &InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
-        if (bIsWallRunning)
+        if (WallRunComponent->IsWallRunning())
         {
-            StopWallRun();
+            WallRunComponent->StopWallRun();
             Debug::Print("Jump DuringWallRun");
             FVector PlaneContraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
             // launch character based on its speeed
@@ -232,9 +230,9 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 #pragma region Dash
 void ASRPlayerCharacter::StartDashing()
 {
-    if (bIsWallRunning)
+    if (WallRunComponent->IsWallRunning())
     {
-        StopWallRun();
+        WallRunComponent->StopWallRun();
     }
     if (GetCharacterMovement()->IsFalling())
     {
@@ -301,7 +299,7 @@ void ASRPlayerCharacter::Grapple(const FHitResult &HitResult)
 {
     if (!HitResult.bBlockingHit)
         return;
-
+    
     if (AActor *HitActor = HitResult.GetActor())
     {
         CableComponent->SetAttachEndTo(HitActor, NAME_None);
@@ -313,7 +311,7 @@ void ASRPlayerCharacter::Grapple(const FHitResult &HitResult)
 
     GetCharacterMovement()->SetMovementMode(MOVE_Flying);
     GetCharacterMovement()->StopMovementImmediately();
-    GetCharacterMovement()->GravityScale = 0.f;
+    GetCharacterMovement()->GravityScale = 0.0f;
 
     CableComponent->SetVisibility(true);
 }
@@ -323,7 +321,7 @@ void ASRPlayerCharacter::UpdateGrappleMovement()
     FVector ToTarget = CurrentGrappleTarget - GetActorLocation();
     float Distance = ToTarget.Size();
 
-    if (Distance < 200.f)
+    if (Distance < 300.f)
     {
         ResetGrappleState();
     }
@@ -360,105 +358,6 @@ void ASRPlayerCharacter::UpdateGrappleCheckTimer()
 }
 #pragma endregion
 
-#pragma region WallRun
-bool ASRPlayerCharacter::CheckForWall(const FHitResult &Hit)
-{
-    float CharacterAndWallAlignment = FMath::Abs(FVector::DotProduct(Hit.ImpactNormal, GetActorRightVector()));
-    return CharacterAndWallAlignment > 0.7;
-}
-
-void ASRPlayerCharacter::StartWallRun(const FHitResult &Hit)
-{
-    bIsWallRunning = true;
-    if (GetCharacterMovement()->IsFalling())
-    {
-        GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-        GetCharacterMovement()->SetPlaneConstraintEnabled(true);
-        GetCharacterMovement()->SetPlaneConstraintNormal(Hit.ImpactNormal);
-    }
-
-    GetWorldTimerManager().SetTimer(
-        WallRunCheckTimerHandle, this, &ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks, 0.1f, true
-    );
-    GetWorldTimerManager().SetTimer(
-        WallRunMovementCheckHandle, this, &ASRPlayerCharacter::CheckWallRunEndDueToNoMovement, 0.1f, true
-    );
-}
-
-void ASRPlayerCharacter::StopWallRun()
-{
-    bIsWallRunning = false;
-    GetCharacterMovement()->SetPlaneConstraintEnabled(false);
-    GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-    GetWorldTimerManager().ClearTimer(WallRunCheckTimerHandle);
-    GetWorldTimerManager().ClearTimer(WallRunMovementCheckHandle);
-}
-
-void ASRPlayerCharacter::EvaluateWallRunStateWithWallChecks()
-{
-    if (!bIsWallRunning)
-    {
-        return;
-    }
-
-    FVector CastOrigin = GetActorLocation();
-
-    auto PerformRayCast = [&CastOrigin](USRRaycastSensor *RaycasterSensor, FVector CastDirection, float Length)
-    {
-        RaycasterSensor->SetCastOrigin(CastOrigin);
-        RaycasterSensor->SetCastDirection(CastDirection);
-        RaycasterSensor->CastLength = Length;
-        RaycasterSensor->DebugCast(); 
-    };
-
-    FVector CastDirectionInwards = GetActorForwardVector();
-    PerformRayCast(RaycastSensorInnerWall, CastDirectionInwards, 150.0f);
-
-    if (RaycastSensorInnerWall->HasDetectedHit())
-    {
-        // Determine how closely the player's movement direction aligns with the wall surface
-        FVector WallNormal = RaycastSensorInnerWall->GetNormal();
-        float PlayerAndObstacleAlignment = FMath::Abs(FVector::DotProduct(WallNormal, CastDirectionInwards));
-
-        // If alignment is high, player is facing the wall too directly—cancel the wall run
-        if (PlayerAndObstacleAlignment > 0.8 && bIsWallRunning)
-        {
-            StopWallRun();
-
-            // Apply a short directional push away from the wall to keep momentum fluid
-            FVector PlaneConstraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
-            float DashStrength = 400.0f;
-            FVector LateralDashForce = FVector(0.0f, DashStrength, 0.0f);
-            LaunchCharacter(PlaneConstraintNormal * DashStrength + LateralDashForce, true, false);
-        }
-    }
-
-    // Check if player has moved too far away from all side walls (i.e., is no longer adjacent to any wall)
-    PerformRayCast(RaycastSensorOuterWall, GetActorRightVector(), 60.0f);
-    bool bRightClear = !RaycastSensorOuterWall->HasDetectedHit();
-
-    PerformRayCast(RaycastSensorOuterWall, -GetActorRightVector(), 60.0f);
-    bool bLeftClear = !RaycastSensorOuterWall->HasDetectedHit();
-
-    // If both left and right sides are clear, player has lost wall contact—end wall run
-    if (bRightClear && bLeftClear && bIsWallRunning)
-    {
-        StopWallRun();
-    }
-}
-
-void ASRPlayerCharacter::CheckWallRunEndDueToNoMovement()
-{
-    if (!bIsWallRunning)
-        return;
-
-    if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero())
-    {
-        StopWallRun();
-    }
-}
-
-
 void ASRPlayerCharacter::NotifyHit(
     UPrimitiveComponent *MyComp,
     AActor *Other,
@@ -470,15 +369,12 @@ void ASRPlayerCharacter::NotifyHit(
     const FHitResult &Hit
 )
 {
-    if (CheckForWall(Hit))
+    if (WallRunComponent->CheckForWall(Hit))
     {
-        StartWallRun(Hit);
+        WallRunComponent->StartWallRun(Hit);
     }
     else
     {
-        StopWallRun();
+        WallRunComponent->StopWallRun();
     }
 }
-
-
-#pragma endregion
