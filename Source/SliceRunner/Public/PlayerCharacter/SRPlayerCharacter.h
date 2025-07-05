@@ -6,14 +6,13 @@
 #include "GameFramework/Character.h"
 #include "InputAction.h"
 #include "Interfaces/Gate/GateRuleInterface.h"
-#include <cfloat>
 #include "SRPlayerCharacter.generated.h"
 
 class UCameraComponent;
 class USRDataAsset_InputConfig;
-class ASRGrapplePoint;
 class UCableComponent;
 class USRWallRunComponent;
+class USRGrappleComponent;
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
@@ -50,10 +49,10 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
     UCameraComponent *FirstPersonCameraComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UCableComponent *CableComponent;
+    USRWallRunComponent *WallRunComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USRWallRunComponent *WallRunComponent;
+    USRGrappleComponent *GrappleComponent;
 
 #pragma endregion
 
@@ -76,18 +75,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
 #pragma endregion
 
 #pragma region Grapple
-    FHitResult CheckForGrapplePoints();
-    void Grapple(const FHitResult &HitResult);
-    void UpdateGrappleMovement();
-    void ResetGrappleState();
-    void UpdateGrappleCheckTimer();
-    bool bIsGrappleAllowed = false;
-    bool bIsGrappling = false;
-    ASRGrapplePoint *GrapplePoint = nullptr;
-    FVector CurrentGrappleTarget;
-    FTimerHandle GrappleCheckTimerHandle;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-    float GrappleSpeed = 2000.0f;
+
 #pragma endregion
 
   private:

@@ -12,7 +12,7 @@
 #include "Debug/DebugHelper.h"
 #include "UI/GrapplePoint/SRGrapplePoint.h"
 #include "Abilities/WallRun/SRWallRunComponent.h"
-#include "CableComponent.h"
+#include "Abilities/Grapple/SRGrappleComponent.h"
 
 
 ASRPlayerCharacter::ASRPlayerCharacter()
@@ -34,17 +34,21 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->JumpZVelocity = JumpVelocity;
 
-    CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("CableComponent"));
-    CableComponent->SetupAttachment(GetMesh(), TEXT("wrist_inner_r"));
-    CableComponent->SetVisibility(false);
-
     WallRunComponent = CreateDefaultSubobject<USRWallRunComponent>("WallRunComponent");
+    GrappleComponent = CreateDefaultSubobject<USRGrappleComponent>("GrappleComponent");
 }
 
 
 
 // Called when the game starts or when spawned
-void ASRPlayerCharacter::BeginPlay() { Super::BeginPlay(); }
+void ASRPlayerCharacter::BeginPlay() { 
+    Super::BeginPlay(); 
+
+    if (GrappleComponent)
+    {
+        GrappleComponent->AttachCableToSocket(GetMesh(), TEXT("wrist_inner_r"));
+    }
+}
 
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
@@ -56,11 +60,7 @@ void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 void ASRPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    if (bIsGrappling)
-    {
-        UpdateGrappleMovement();
-    }
+  
 }
 
 // Called to bind functionality to input
@@ -122,8 +122,8 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 void ASRPlayerCharacter::SetGateAbilityFlags(const FGateAbilityFlags &InFlags)
 {
     CurrentZoneFlags = InFlags;
-    bIsGrappleAllowed = InFlags.bCanGrapple;
-    UpdateGrappleCheckTimer();
+    GrappleComponent->SetAllowGrapple(InFlags.bCanGrapple);
+    GrappleComponent->UpdateGrappleCheckTimer();
 }
 
 #pragma region Inputs
@@ -216,12 +216,12 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 {
     if (InputActionValue.Get<bool>())
     {
-        FHitResult Results = CheckForGrapplePoints();
-        Grapple(Results);
+        FHitResult Results = GrappleComponent->CheckForGrapplePoints();
+        GrappleComponent->Grapple(Results);
     }
     else
     {
-        ResetGrappleState();
+        GrappleComponent->ResetGrappleState();
     }
 }
 
@@ -252,110 +252,7 @@ void ASRPlayerCharacter::StopDashing()
 #pragma endregion
 
 #pragma region Grapple
-FHitResult ASRPlayerCharacter::CheckForGrapplePoints()
-{
-    if (!bIsGrappleAllowed)
-        return FHitResult();
 
-    float TraceRadius = 50.0f;
-    FVector Start = GetActorLocation();
-    float TraceDistance = 1200.0f;
-    FVector End = Start + GetControlRotation().Vector() * TraceDistance;
-
-    TArray<FHitResult> OutHits;
-    FCollisionQueryParams QueryParam;
-    QueryParam.AddIgnoredActor(this);
-
-    FCollisionObjectQueryParams ObjectQueryParams;
-    ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
-
-    bool bHit = GetWorld()->SweepMultiByObjectType(
-        OutHits, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), QueryParam
-    );
-
-    // Hide previous grapple icon
-    if (GrapplePoint)
-    {
-        GrapplePoint->SetGrappleIconVisible(false);
-        GrapplePoint = nullptr;
-    }
-
-    for (const FHitResult &Hit : OutHits)
-    {
-        ASRGrapplePoint *HitPoint = Cast<ASRGrapplePoint>(Hit.GetActor());
-        if (HitPoint)
-        {
-            HitPoint->SetGrappleIconVisible(true);
-            GrapplePoint = HitPoint;
-
-            return Hit;
-        }
-    }
-
-    return FHitResult();
-}
-
-void ASRPlayerCharacter::Grapple(const FHitResult &HitResult)
-{
-    if (!HitResult.bBlockingHit)
-        return;
-    
-    if (AActor *HitActor = HitResult.GetActor())
-    {
-        CableComponent->SetAttachEndTo(HitActor, NAME_None);
-        CableComponent->EndLocation = FVector::ZeroVector;
-    }
-
-    bIsGrappling = true;
-    CurrentGrappleTarget = HitResult.ImpactPoint;
-
-    GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-    GetCharacterMovement()->StopMovementImmediately();
-    GetCharacterMovement()->GravityScale = 0.0f;
-
-    CableComponent->SetVisibility(true);
-}
-
-void ASRPlayerCharacter::UpdateGrappleMovement()
-{
-    FVector ToTarget = CurrentGrappleTarget - GetActorLocation();
-    float Distance = ToTarget.Size();
-
-    if (Distance < 300.f)
-    {
-        ResetGrappleState();
-    }
-    else
-    {
-        FVector Direction = ToTarget.GetSafeNormal();
-        GetCharacterMovement()->Velocity = Direction * GrappleSpeed;
-    }
-}
-
-void ASRPlayerCharacter::ResetGrappleState()
-{
-    bIsGrappling = false;
-    CableComponent->SetVisibility(false);
-    CableComponent->SetAttachEndTo(nullptr, NAME_None);
-
-    GetCharacterMovement()->GravityScale = 1.0f;
-    GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-}
-
-
-void ASRPlayerCharacter::UpdateGrappleCheckTimer()
-{
-    if (bIsGrappleAllowed)
-    {
-        GetWorldTimerManager().SetTimer(
-            GrappleCheckTimerHandle, FTimerDelegate::CreateLambda([this]() { CheckForGrapplePoints(); }), 0.1f, true
-        );
-    }
-    else
-    {
-        GetWorldTimerManager().ClearTimer(GrappleCheckTimerHandle);
-    }
-}
 #pragma endregion
 
 void ASRPlayerCharacter::NotifyHit(
