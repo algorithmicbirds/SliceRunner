@@ -7,7 +7,7 @@
 #include "SRWallRunComponent.generated.h"
 
 class USRRaycastSensor;
-class ACharacter;
+class ASRBaseCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SLICERUNNER_API USRWallRunComponent : public UActorComponent
@@ -42,5 +42,5 @@ private:
   bool bIsWallRunning = false;
   FTimerHandle WallRunCheckTimerHandle;
   FTimerHandle WallRunMovementCheckHandle;
-  ACharacter *Character;
+  ASRBaseCharacter *Character;
 };

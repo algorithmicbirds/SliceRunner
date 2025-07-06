@@ -3,7 +3,7 @@
 
 #include "Abilities/WallRun/SRWallRunComponent.h"
 #include "Components/Raycaster/SRRaycastSensor.h"
-#include "GameFramework/Character.h"
+#include "PlayerCharacter/SRBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
@@ -22,7 +22,7 @@ USRWallRunComponent::USRWallRunComponent()
 void USRWallRunComponent::BeginPlay()
 {
 	Super::BeginPlay();
-    Character = Cast<ACharacter>(GetOwner());
+    Character = Cast<ASRBaseCharacter>(GetOwner());
 	
 }
 

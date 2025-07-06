@@ -1,7 +1,7 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
 #include "Abilities/Grapple/SRGrappleComponent.h"
-#include "GameFramework/Character.h"
+#include "PlayerCharacter/SRBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UI/GrapplePoint/SRGrapplePoint.h"
 #include "CableComponent.h"
@@ -22,7 +22,7 @@ USRGrappleComponent::USRGrappleComponent()
 void USRGrappleComponent::BeginPlay()
 {
     Super::BeginPlay();
-    Character = Cast<ACharacter>(GetOwner());
+    Character = Cast<ASRBaseCharacter>(GetOwner());
 }
 
 // Called every frame

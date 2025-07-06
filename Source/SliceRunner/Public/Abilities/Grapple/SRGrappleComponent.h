@@ -7,7 +7,7 @@
 #include "SRGrappleComponent.generated.h"
 
 class ASRGrapplePoint;
-class ACharacter;
+class ASRBaseCharacter;
 class UCableComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -45,7 +45,7 @@ class SLICERUNNER_API USRGrappleComponent : public UActorComponent
     ASRGrapplePoint *GrapplePoint = nullptr;
     FVector CurrentGrappleTarget;
     FTimerHandle GrappleCheckTimerHandle;
-    ACharacter *Character;
+    ASRBaseCharacter *Character;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
     float GrappleSpeed = 2000.0f;
 };

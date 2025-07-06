@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputAction.h"
 #include "Interfaces/Gate/GateRuleInterface.h"
+#include "PlayerCharacter/SRBaseCharacter.h"
 #include "SRPlayerCharacter.generated.h"
 
 class UCameraComponent;
@@ -15,7 +16,7 @@ class USRWallRunComponent;
 class USRGrappleComponent;
 
 UCLASS()
-class SLICERUNNER_API ASRPlayerCharacter : public ACharacter
+class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
 {
     GENERATED_BODY()
 
