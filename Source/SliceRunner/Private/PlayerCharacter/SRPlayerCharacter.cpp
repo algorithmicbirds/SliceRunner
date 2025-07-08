@@ -21,14 +21,18 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
     GetCapsuleComponent()->InitCapsuleSize(32.0f, 96.0f);
 
+    FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
+    FirstPersonMesh->SetupAttachment(GetCapsuleComponent());
+    FirstPersonMesh->SetOnlyOwnerSee(true);
+    FirstPersonMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    FirstPersonMesh->SetCastShadow(false);
+
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-    FirstPersonCameraComponent->SetupAttachment(GetMesh(), TEXT("head"));
+    FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, TEXT("head"));
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-    FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
-    FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
-    FirstPersonMesh->SetOnlyOwnerSee(true);
-    FirstPersonMesh->SetCollisionProfileName(TEXT("NoCollision"));
+    WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+    WeaponMesh->SetupAttachment(FirstPersonMesh, TEXT("katana_socket"));
 
     GetCharacterMovement()->BrakingDecelerationFalling = FallingBrakingDeceleration;
     GetCharacterMovement()->AirControl = AirControl;
@@ -46,7 +50,7 @@ void ASRPlayerCharacter::BeginPlay() {
 
     if (GrappleComponent)
     {
-        GrappleComponent->AttachCableToSocket(GetMesh(), TEXT("wrist_inner_r"));
+        GrappleComponent->AttachCableToSocket(FirstPersonMesh, TEXT("grapple_hook_socket"));
     }
 }
 

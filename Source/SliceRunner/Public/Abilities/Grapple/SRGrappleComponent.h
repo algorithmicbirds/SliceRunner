@@ -45,6 +45,7 @@ class SLICERUNNER_API USRGrappleComponent : public UActorComponent
     ASRGrapplePoint *GrapplePoint = nullptr;
     FVector CurrentGrappleTarget;
     FTimerHandle GrappleCheckTimerHandle;
+    UPROPERTY()
     ASRBaseCharacter *Character;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
     float GrappleSpeed = 2000.0f;

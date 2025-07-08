@@ -42,5 +42,6 @@ private:
   bool bIsWallRunning = false;
   FTimerHandle WallRunCheckTimerHandle;
   FTimerHandle WallRunMovementCheckHandle;
+  UPROPERTY()
   ASRBaseCharacter *Character;
 };

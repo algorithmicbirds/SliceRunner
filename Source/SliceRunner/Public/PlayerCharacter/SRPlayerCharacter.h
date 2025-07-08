@@ -14,6 +14,7 @@ class USRDataAsset_InputConfig;
 class UCableComponent;
 class USRWallRunComponent;
 class USRGrappleComponent;
+class UStaticMeshComponent;
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
@@ -54,6 +55,10 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     USRGrappleComponent *GrappleComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UStaticMeshComponent *WeaponMesh;
+
 
 #pragma endregion
 

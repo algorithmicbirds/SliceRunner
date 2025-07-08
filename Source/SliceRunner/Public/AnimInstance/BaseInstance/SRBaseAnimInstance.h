@@ -7,11 +7,11 @@
 #include "SRBaseAnimInstance.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class SLICERUNNER_API USRBaseAnimInstance : public UAnimInstance
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 };
