@@ -1,6 +1,6 @@
 # SliceRunner
 
-**SliceRunner** is a first-person portfolio project built in Unreal Engine 5.6
+**SliceRunner** is a first-person portfolio project built in Unreal Engine 5.5
 It's focused on high-speed movement and precision katana combat — heavily inspired by *Ghostrunner*.
 
 ## Status
@@ -11,7 +11,7 @@ Still in Development
 
 - Wall-running and parkour style traversel
 - One-hit melee combat with katana  
-- Core logic implemented in C++ and High level in Blueprints
+- Core logic implemented in C++ and Blueprints for assets hooking
 
 ## Repo Info
 
