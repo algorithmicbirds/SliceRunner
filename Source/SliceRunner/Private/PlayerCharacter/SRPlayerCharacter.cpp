@@ -21,15 +21,16 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
     GetCapsuleComponent()->InitCapsuleSize(32.0f, 96.0f);
 
+    FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+    FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
     FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
-    FirstPersonMesh->SetupAttachment(GetCapsuleComponent());
+    FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
     FirstPersonMesh->SetOnlyOwnerSee(true);
     FirstPersonMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     FirstPersonMesh->SetCastShadow(false);
 
-    FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-    FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, TEXT("head"));
-    FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
     WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
     WeaponMesh->SetupAttachment(FirstPersonMesh, TEXT("katana_socket"));
@@ -61,11 +62,7 @@ void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 }
 
 // Called every frame
-void ASRPlayerCharacter::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-  
-}
+void ASRPlayerCharacter::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
 
 // Called to bind functionality to input
 void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
