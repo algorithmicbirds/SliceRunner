@@ -15,6 +15,7 @@ class UCableComponent;
 class USRWallRunComponent;
 class USRGrappleComponent;
 class UStaticMeshComponent;
+class USRAbilityManager;
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
@@ -59,6 +60,8 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UStaticMeshComponent *WeaponMesh;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    USRAbilityManager *AbilityManager;
 
 #pragma endregion
 
@@ -78,10 +81,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
     void StartDashing();
     void StopDashing();
     bool bIsDashing = false;
-#pragma endregion
-
-#pragma region Grapple
-
 #pragma endregion
 
   private:

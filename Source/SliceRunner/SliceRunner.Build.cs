@@ -17,8 +17,6 @@ public class SliceRunner : ModuleRules
 			"GameplayTags", 
 			"UMG",
 			"CableComponent",
-			"ControlRig",
-			"RigVM"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

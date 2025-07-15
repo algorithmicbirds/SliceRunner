@@ -13,6 +13,7 @@
 #include "UI/GrapplePoint/SRGrapplePoint.h"
 #include "Abilities/WallRun/SRWallRunComponent.h"
 #include "Abilities/Grapple/SRGrappleComponent.h"
+#include "Abilities/Core/SRAbilityManager.h"
 
 
 ASRPlayerCharacter::ASRPlayerCharacter()
@@ -41,6 +42,8 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
     WallRunComponent = CreateDefaultSubobject<USRWallRunComponent>("WallRunComponent");
     GrappleComponent = CreateDefaultSubobject<USRGrappleComponent>("GrappleComponent");
+
+    AbilityManager = CreateDefaultSubobject<USRAbilityManager>("AbilityManager");
 }
 
 
