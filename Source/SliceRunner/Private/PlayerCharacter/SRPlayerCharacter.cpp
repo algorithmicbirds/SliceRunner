@@ -11,9 +11,9 @@
 #include "Input/SREnhancedInputComponent.h"
 #include "Debug/DebugHelper.h"
 #include "UI/GrapplePoint/SRGrapplePoint.h"
-#include "Abilities/WallRun/SRWallRunComponent.h"
 #include "Abilities/Grapple/SRGrappleComponent.h"
 #include "Abilities/Core/SRAbilityManager.h"
+#include "Abilities/Core/SRAbilityActivationContext.h"
 
 
 ASRPlayerCharacter::ASRPlayerCharacter()
@@ -40,7 +40,6 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->JumpZVelocity = JumpVelocity;
 
-    WallRunComponent = CreateDefaultSubobject<USRWallRunComponent>("WallRunComponent");
     GrappleComponent = CreateDefaultSubobject<USRGrappleComponent>("GrappleComponent");
 
     AbilityManager = CreateDefaultSubobject<USRAbilityManager>("AbilityManager");
@@ -61,7 +60,7 @@ void ASRPlayerCharacter::BeginPlay() {
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
     Super::Landed(Hit);
-    WallRunComponent->StopWallRun();
+    //WallRunComponent->StopWallRun();
 }
 
 // Called every frame
@@ -145,21 +144,16 @@ void ASRPlayerCharacter::Input_Move(const FInputActionValue &InputActionValue)
 
     if (MovementVector.X != 0.0f)
     {
-        if (WallRunComponent->IsWallRunning())
+       /* if (WallRunComponent->IsWallRunning())
         {
             WallRunComponent->StopWallRun();
-        }
+        }*/
         const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
         if (bIsDashing)
         {
             const float MoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
             FVector DeltaMove = RightDirection * MovementVector.X * MoveSpeed * GetWorld()->GetDeltaSeconds();
             AddActorWorldOffset(DeltaMove, true);
-            // Use AddMovementInput to trigger character animations correctly.
-            // AddActorWorldOffset only moves the actor in world space and bypasses the animation system.
-            // Note: If time is slowed down, relying solely on AddMovementInput may result in slower movement.
-            // Combining both ensures visual correctness and consistent movement behavior.
-            AddMovementInput(RightDirection, MovementVector.X * 0.1);
         }
         else
         {
@@ -186,16 +180,16 @@ void ASRPlayerCharacter::Input_Jump(const FInputActionValue &InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
-        if (WallRunComponent->IsWallRunning())
-        {
-            WallRunComponent->StopWallRun();
-            Debug::Print("Jump DuringWallRun");
-            FVector PlaneContraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
-            // launch character based on its speeed
-            const float DashStrength = GetVelocity().Length();
-            FVector UpwardForce = FVector(0, 0, DashStrength);
-            LaunchCharacter(PlaneContraintNormal * DashStrength + UpwardForce, false, true);
-        }
+        //if (WallRunComponent->IsWallRunning())
+        //{
+        //    WallRunComponent->StopWallRun();
+        //    Debug::Print("Jump DuringWallRun");
+        //    FVector PlaneContraintNormal = GetCharacterMovement()->GetPlaneConstraintNormal();
+        //    // launch character based on its speeed
+        //    const float DashStrength = GetVelocity().Length();
+        //    FVector UpwardForce = FVector(0, 0, DashStrength);
+        //    LaunchCharacter(PlaneContraintNormal * DashStrength + UpwardForce, false, true);
+        //}
         Jump();
     }
     else
@@ -234,10 +228,10 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 #pragma region Dash
 void ASRPlayerCharacter::StartDashing()
 {
-    if (WallRunComponent->IsWallRunning())
+  /*  if (WallRunComponent->IsWallRunning())
     {
         WallRunComponent->StopWallRun();
-    }
+    }*/
     if (GetCharacterMovement()->IsFalling())
     {
         bIsDashing = true;
@@ -255,10 +249,6 @@ void ASRPlayerCharacter::StopDashing()
 }
 #pragma endregion
 
-#pragma region Grapple
-
-#pragma endregion
-
 void ASRPlayerCharacter::NotifyHit(
     UPrimitiveComponent *MyComp,
     AActor *Other,
@@ -270,12 +260,7 @@ void ASRPlayerCharacter::NotifyHit(
     const FHitResult &Hit
 )
 {
-    if (WallRunComponent->CheckForWall(Hit))
-    {
-        WallRunComponent->StartWallRun(Hit);
-    }
-    else
-    {
-        WallRunComponent->StopWallRun();
-    }
+    FSRAbilityActivationContext Context;
+    Context.HitResults = Hit;
+    AbilityManager->StartAbilityByName(this, "WallRun", Context);
 }

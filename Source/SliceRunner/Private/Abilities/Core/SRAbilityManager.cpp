@@ -2,10 +2,19 @@
 
 #include "Abilities/Core/SRAbilityManager.h"
 #include "Abilities/Core/SRAbilityBase.h"
+#include "Abilities/Core/SRAbilityActivationContext.h"
+#include "Debug/DebugHelper.h"
 
-USRAbilityManager::USRAbilityManager() { PrimaryComponentTick.bCanEverTick = true; }
+USRAbilityManager::USRAbilityManager() { PrimaryComponentTick.bCanEverTick = false; }
 
-void USRAbilityManager::BeginPlay() { Super::BeginPlay(); }
+void USRAbilityManager::BeginPlay()
+{
+    Super::BeginPlay();
+    for (TSubclassOf<USRAbilityBase> AbilityClass : DefaultAbilities)
+    {
+        AddAbility(GetOwner(), AbilityClass);
+    }
+}
 
 void USRAbilityManager::TickComponent(
     float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction
@@ -27,13 +36,13 @@ void USRAbilityManager::AddAbility(AActor *Instigator, TSubclassOf<USRAbilityBas
     }
 }
 
-bool USRAbilityManager::StartAbilityByName(AActor *Instigator, FName AbilityName)
+bool USRAbilityManager::StartAbilityByName(AActor *Instigator, FName AbilityName, const FSRAbilityActivationContext &Context)
 {
     for (USRAbilityBase *Ability : Abilities)
     {
         if (Ability && Ability->AbilityName == AbilityName)
         {
-            Ability->StartAbility(Instigator);
+            Ability->StartAbility(Instigator, Context);
             return true;
         }
     }
@@ -47,7 +56,7 @@ bool USRAbilityManager::StopAbilityByName(AActor *Instigator, FName AbilityName)
     {
         if (Ability && Ability->AbilityName == AbilityName)
         {
-            Ability->StartAbility(Instigator);
+            Ability->StopAbility(Instigator);
             return true;
         }
     }

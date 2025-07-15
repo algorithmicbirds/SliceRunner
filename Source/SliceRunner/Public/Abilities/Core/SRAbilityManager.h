@@ -7,6 +7,7 @@
 #include "SRAbilityManager.generated.h"
 
 class USRAbilityBase;
+struct FSRAbilityActivationContext;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SLICERUNNER_API USRAbilityManager : public UActorComponent
@@ -19,8 +20,11 @@ class SLICERUNNER_API USRAbilityManager : public UActorComponent
   protected:
     virtual void BeginPlay() override;
 
-    UPROPERTY()
+    UPROPERTY(BlueprintReadOnly)
     TArray<TObjectPtr<USRAbilityBase>> Abilities;
+
+    UPROPERTY(EditAnywhere, Category = "Ability")
+    TArray<TSubclassOf<USRAbilityBase>> DefaultAbilities;
 
   public:
     virtual void
@@ -30,7 +34,7 @@ class SLICERUNNER_API USRAbilityManager : public UActorComponent
     void AddAbility(AActor *Instigator, TSubclassOf<USRAbilityBase> AbilityClass);
 
     UFUNCTION(BlueprintCallable, Category = "Ability")
-    bool StartAbilityByName(AActor *Instigator, FName AbilityName);
+    bool StartAbilityByName(AActor *Instigator, FName AbilityName, const FSRAbilityActivationContext &Context);
 
     UFUNCTION(BlueprintCallable, Category = "Ability")
     bool StopAbilityByName(AActor *Instigator, FName AbilityName);

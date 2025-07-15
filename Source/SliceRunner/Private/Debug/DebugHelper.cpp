@@ -77,4 +77,19 @@ void DrawSweepDebug(
     }
 }
 
+void DrawLineDebug(UWorld *World, const FVector &Start, const FVector &End, const FHitResult &Hit, float Duration)
+{
+    if (!World)
+        return;
+
+    DrawDebugLine(World, Start, End, FColor::Red, false, Duration, 0, 2.0f);
+
+    if (Hit.bBlockingHit)
+    {
+        DrawDebugLine(World, Start, Hit.ImpactPoint, FColor::Yellow, false, Duration, 0, 2.0f);
+        DrawDebugSphere(World, Hit.ImpactPoint, 10.0f, 12, FColor::Yellow, false, Duration);
+    }
+}
+
+
 } // namespace Debug

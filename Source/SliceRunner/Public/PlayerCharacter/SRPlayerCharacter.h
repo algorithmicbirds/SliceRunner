@@ -50,10 +50,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent *FirstPersonCameraComponent;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USRWallRunComponent *WallRunComponent;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     USRGrappleComponent *GrappleComponent;
 

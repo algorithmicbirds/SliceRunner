@@ -17,4 +17,5 @@ void DrawSweepDebug(
     const TArray<FHitResult> &Hits,
     float Duration = 1.0f
 );
+void DrawLineDebug(UWorld *World, const FVector &Start, const FVector &End, const FHitResult &Hit, float Duration);
 } // namespace Debug
