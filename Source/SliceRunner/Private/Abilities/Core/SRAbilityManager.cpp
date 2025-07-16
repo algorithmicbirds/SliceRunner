@@ -1,4 +1,4 @@
-// Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
+// Copyright (c) 2025 algorithmicbird. All rights reserved.
 
 #include "Abilities/Core/SRAbilityManager.h"
 #include "Abilities/Core/SRAbilityBase.h"

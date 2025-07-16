@@ -31,5 +31,10 @@ If you're looking to access the full project (for educational use only), contact
 
 ## Licensing
 
-- Code: [MIT License](LICENSE)
-- Everything else: [Unreal Engine EULA](https://www.unrealengine.com/en-US/eula)
+-Code: Copyright © 2025 algorithmicbird. All rights reserved.
+-Everything else: [Unreal Engine EULA](https://www.unrealengine.com/en-US/eula)
+
+## Credits
+
+- Ability System Inspired By [Tom Looman's ActionRogueLike](https://github.com/tomlooman/ActionRoguelike) 
+- Input System is based on [Vince Petrelli's WarriorRPG](https://github.com/vinceright3/WarriorRPG)

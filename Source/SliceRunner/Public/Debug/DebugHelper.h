@@ -1,4 +1,4 @@
-#pragma once
+// Copyright (c) 2025 algorithmicbird. All rights reserved.
 
 #include "CoreMinimal.h"
 

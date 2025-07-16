@@ -1,4 +1,4 @@
-// Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
+// Copyright (c) 2025 algorithmicbird. All rights reserved.
 
 #pragma once
 
@@ -9,9 +9,9 @@
 UCLASS()
 class SLICERUNNER_API ASRBaseCharacter : public ACharacter
 {
-	GENERATED_BODY()
+        GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	ASRBaseCharacter();
+        // Sets default values for this character's properties
+        ASRBaseCharacter();
 };

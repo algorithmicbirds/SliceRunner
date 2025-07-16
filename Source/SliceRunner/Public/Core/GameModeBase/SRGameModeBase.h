@@ -1,4 +1,4 @@
-// Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
+// Copyright (c) 2025 algorithmicbird. All rights reserved.
 
 #pragma once
 
@@ -12,6 +12,6 @@
 UCLASS()
 class SLICERUNNER_API ASRGameModeBase : public AGameModeBase
 {
-	GENERATED_BODY()
-	
+        GENERATED_BODY()
+        
 };
