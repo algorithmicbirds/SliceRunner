@@ -20,9 +20,9 @@ void USRAbilityManager::TickComponent(
     float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction
 )
 {
-    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    /*Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     FString DebugMsg = GetNameSafe(GetOwner()) + ActiveAbilities.ToStringSimple();
-    Debug::Print(DebugMsg, 2);
+    Debug::Print(DebugMsg, 2);*/
 }
 
 void USRAbilityManager::AddAbility(AActor *Instigator, TSubclassOf<USRAbilityBase> AbilityClass)

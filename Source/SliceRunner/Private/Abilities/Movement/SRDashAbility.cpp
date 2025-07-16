@@ -1,6 +1,6 @@
 // Copyright (c) 2025 algorithmicbird. All rights reserved.
 
-#include "Abilities/Dash/SRDashComponent.h"
+#include "Abilities/Movement/SRDashAbility.h"
 
 USRDashComponent::USRDashComponent() { PrimaryComponentTick.bCanEverTick = false; }
 

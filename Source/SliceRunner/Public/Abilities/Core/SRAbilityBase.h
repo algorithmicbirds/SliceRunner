@@ -28,11 +28,8 @@ class SLICERUNNER_API USRAbilityBase : public UObject
     FGameplayTagContainer BlockTags;
 
   public:
-    UFUNCTION(BlueprintNativeEvent, Category = "Ability")
-    void StartAbility(AActor *Instigator, const FSRAbilityActivationContext &Context);
-
-    UFUNCTION(BlueprintNativeEvent, Category = "Ability")
-    void StopAbility(AActor *Instigator);
+    virtual void StartAbility(AActor *Instigator, const FSRAbilityActivationContext &Context);
+    virtual void StopAbility(AActor *Instigator);
 
     UPROPERTY(EditAnywhere, Category = "Ability")
     FName AbilityName;

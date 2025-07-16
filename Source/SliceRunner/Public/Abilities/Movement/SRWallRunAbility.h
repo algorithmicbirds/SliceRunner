@@ -18,7 +18,8 @@ class SLICERUNNER_API USRWallRunAbility : public USRAbilityBase
     USRWallRunAbility();
 
   public:
-    virtual void StartAbility_Implementation(AActor *Instigator, const FSRAbilityActivationContext &Context) override;
+    virtual void StartAbility(AActor *Instigator, const FSRAbilityActivationContext &Context) override;
+    virtual void StopAbility(AActor *Instigator) override;
     void StartWallRun(const FHitResult &Hit);
     void StopWallRun();
     bool CheckForWall(const FHitResult &Hit);

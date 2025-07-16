@@ -12,10 +12,9 @@
 class UCameraComponent;
 class USRDataAsset_InputConfig;
 class UCableComponent;
-class USRWallRunComponent;
-class USRGrappleComponent;
 class UStaticMeshComponent;
 class USRAbilityManager;
+class USRGrappleDetectionComponent;
 
 UCLASS()
 class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
@@ -51,7 +50,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent *FirstPersonCameraComponent;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USRGrappleComponent *GrappleComponent;
+    USRGrappleDetectionComponent *GrappleDetectionComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UStaticMeshComponent *WeaponMesh;
@@ -80,7 +79,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
 #pragma endregion
 
   private:
-    FGateAbilityFlags CurrentZoneFlags;
+    FGateAbilityFlags CurrentGateAbilityFlags;
 
   public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")

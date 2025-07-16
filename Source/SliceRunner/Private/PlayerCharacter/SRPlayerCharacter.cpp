@@ -10,9 +10,9 @@
 #include "GameplayTags/SRGameplayTags.h"
 #include "Core/Input/SREnhancedInputComponent.h"
 #include "Debug/DebugHelper.h"
-#include "Abilities/Grapple/SRGrappleComponent.h"
 #include "Abilities/Core/SRAbilityManager.h"
 #include "Abilities/Core/SRAbilityActivationContext.h"
+#include "Abilities/Movement/SRGrappleDetectionComponent.h"
 
 
 ASRPlayerCharacter::ASRPlayerCharacter()
@@ -25,47 +25,33 @@ ASRPlayerCharacter::ASRPlayerCharacter()
     FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
-    FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
-    FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
-    FirstPersonMesh->SetOnlyOwnerSee(true);
-    FirstPersonMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    FirstPersonMesh->SetCastShadow(false);
-
+    GetMesh()->SetupAttachment(FirstPersonCameraComponent);
 
     WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-    WeaponMesh->SetupAttachment(FirstPersonMesh, TEXT("katana_socket"));
+    WeaponMesh->SetupAttachment(GetMesh(), TEXT("katana_socket"));
 
     GetCharacterMovement()->BrakingDecelerationFalling = FallingBrakingDeceleration;
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->JumpZVelocity = JumpVelocity;
 
-    GrappleComponent = CreateDefaultSubobject<USRGrappleComponent>("GrappleComponent");
+    GrappleDetectionComponent = CreateDefaultSubobject<USRGrappleDetectionComponent>(TEXT("GrappleDetectionComponent"));
 
-    AbilityManager = CreateDefaultSubobject<USRAbilityManager>("AbilityManager");
+    AbilityManager = CreateDefaultSubobject<USRAbilityManager>(TEXT("AbilityManager"));
 }
 
 
 
-// Called when the game starts or when spawned
 void ASRPlayerCharacter::BeginPlay() { 
     Super::BeginPlay(); 
-
-    if (GrappleComponent)
-    {
-        GrappleComponent->AttachCableToSocket(FirstPersonMesh, TEXT("grapple_hook_socket"));
-    }
 }
 
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
     Super::Landed(Hit);
-    //WallRunComponent->StopWallRun();
 }
 
-// Called every frame
 void ASRPlayerCharacter::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
 
-// Called to bind functionality to input
 void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -123,9 +109,17 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 
 void ASRPlayerCharacter::SetGateAbilityFlags(const FGateAbilityFlags &InFlags)
 {
-    CurrentZoneFlags = InFlags;
-    GrappleComponent->SetAllowGrapple(InFlags.bCanGrapple);
-    GrappleComponent->UpdateGrappleCheckTimer();
+    CurrentGateAbilityFlags = InFlags;
+    FString DebugMsg = LexToString(InFlags.bCanGrapple);
+    Debug::Print(DebugMsg);
+    if (InFlags.bCanGrapple)
+    {
+        GrappleDetectionComponent->EnableGrappleDetection();
+    }
+    else
+    {
+        GrappleDetectionComponent->DisableGrappleDetection();
+    }
 }
 
 #pragma region Inputs
@@ -213,12 +207,13 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 {
     if (InputActionValue.Get<bool>())
     {
-        FHitResult Results = GrappleComponent->CheckForGrapplePoints();
-        GrappleComponent->Grapple(Results);
+        FSRAbilityActivationContext Context;
+        Context.HitResults = GrappleDetectionComponent->CheckForGrapplePoints();
+        AbilityManager->StartAbilityByName(this, "Grapple", Context);
     }
     else
     {
-        GrappleComponent->ResetGrappleState();
+        AbilityManager->StopAbilityByName(this, "Grapple");
     }
 }
 
@@ -227,10 +222,6 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 #pragma region Dash
 void ASRPlayerCharacter::StartDashing()
 {
-  /*  if (WallRunComponent->IsWallRunning())
-    {
-        WallRunComponent->StopWallRun();
-    }*/
     if (GetCharacterMovement()->IsFalling())
     {
         bIsDashing = true;

@@ -21,14 +21,20 @@ bool USRWallRunAbility::CheckForWall(const FHitResult &Hit)
 }
 
 
-void USRWallRunAbility::StartAbility_Implementation(AActor *Instigator, const FSRAbilityActivationContext &Context)
+void USRWallRunAbility::StartAbility(AActor *Instigator, const FSRAbilityActivationContext &Context)
 {
-    Super::StartAbility_Implementation(Instigator, Context);
+    Super::StartAbility(Instigator, Context);
     Character = CastChecked<ASRBaseCharacter>(Instigator);
     if (CheckForWall(Context.HitResults))
     {
         StartWallRun(Context.HitResults);
     }
+}
+
+void USRWallRunAbility::StopAbility(AActor *Instigator)
+{
+    Super::StopAbility(Instigator);
+    StopWallRun();
 }
 
 void USRWallRunAbility::StartWallRun(const FHitResult &Hit)

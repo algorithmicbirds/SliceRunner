@@ -14,7 +14,6 @@ struct FGateAbilityFlags
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gate Ability")
     bool bCanGrapple = false;
 
-    void Reset() { bCanGrapple = false; }
 };
 
 // This class does not need to be modified.

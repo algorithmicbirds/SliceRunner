@@ -17,6 +17,7 @@ public class SliceRunner : ModuleRules
 			"GameplayTags", 
 			"UMG",
 			"CableComponent",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

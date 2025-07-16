@@ -5,16 +5,15 @@
 #include "Abilities/Core/SRAbilityManager.h"
 #include "Debug/DebugHelper.h"
 
-void USRAbilityBase::StartAbility_Implementation(AActor *Instigator, const FSRAbilityActivationContext &Context)
-{
-    //Debug::Print(FString("Start Ability: ") + FString(GetNameSafe(this)));
+
+void USRAbilityBase::StartAbility(AActor *Instigator, const FSRAbilityActivationContext &Context) {
+    // Debug::Print(FString("Start Ability: ") + FString(GetNameSafe(this)));
     USRAbilityManager *AbilityManager = GetOwningComponent();
     AbilityManager->ActiveAbilities.AppendTags(GrantTags);
 }
 
-void USRAbilityBase::StopAbility_Implementation(AActor *Instigator)
-{
-    //Debug::Print(FString("Stop Ability: ") + FString(GetNameSafe(this)));
+void USRAbilityBase::StopAbility(AActor *Instigator) {
+    // Debug::Print(FString("Stop Ability: ") + FString(GetNameSafe(this)));
     USRAbilityManager *AbilityManager = GetOwningComponent();
     AbilityManager->ActiveAbilities.RemoveTags(GrantTags);
 }
