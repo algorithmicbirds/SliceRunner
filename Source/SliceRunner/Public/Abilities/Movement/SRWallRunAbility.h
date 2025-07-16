@@ -32,5 +32,5 @@ class SLICERUNNER_API USRWallRunAbility : public USRAbilityBase
     FTimerHandle WallRunCheckTimerHandle;
     FTimerHandle WallRunMovementCheckHandle;
     UPROPERTY()
-    ASRBaseCharacter *Character = nullptr;
+    TObjectPtr<ASRBaseCharacter> Character = nullptr;
 };

@@ -3,7 +3,7 @@
 #include "Abilities/Grapple/SRGrappleComponent.h"
 #include "PlayerCharacter/SRBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "UI/GrapplePoint/SRGrapplePoint.h"
+#include "World/GrapplePoint/SRGrapplePoint.h"
 #include "CableComponent.h"
 
 // Sets default values for this component's properties

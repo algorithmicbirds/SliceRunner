@@ -1,7 +1,7 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
-#include "UI/GrapplePoint/SRGrapplePoint.h"
-#include "UI/GrapplePoint/SRGrapplePointWidget.h"
+#include "World/GrapplePoint/SRGrapplePoint.h"
+#include "World/GrapplePoint/SRGrapplePointWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 

@@ -1,6 +1,6 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
-#include "Camera/SRPlayerCameraManager.h"
+#include "Core/Camera/SRPlayerCameraManager.h"
 
 ASRPlayerCameraManager::ASRPlayerCameraManager()
 {

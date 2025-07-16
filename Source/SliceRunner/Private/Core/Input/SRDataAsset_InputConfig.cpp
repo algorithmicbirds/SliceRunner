@@ -1,6 +1,6 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
-#include "Input/SRDataAsset_InputConfig.h"
+#include "Core/Input/SRDataAsset_InputConfig.h"
 
 UInputAction *USRDataAsset_InputConfig::FindNativeInputActionByTag(const FGameplayTag &InInputTag) const
 {

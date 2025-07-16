@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnhancedInputComponent.h"
-#include "Input/SRDataAsset_InputConfig.h"
+#include "Core/Input/SRDataAsset_InputConfig.h"
 #include "SREnhancedInputComponent.generated.h"
 
 /**

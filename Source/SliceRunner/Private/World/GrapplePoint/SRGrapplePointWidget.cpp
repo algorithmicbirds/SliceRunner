@@ -1,6 +1,6 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
-#include "UI/GrapplePoint/SRGrapplePointWidget.h"
+#include "World/GrapplePoint/SRGrapplePointWidget.h"
 #include "Components/Image.h"
 
 void USRGrapplePointWidget::NativeConstruct()

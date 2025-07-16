@@ -1,5 +1,5 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
 
-#include "Input/SREnhancedInputComponent.h"
+#include "Core/GameModeBase/SRGameModeBase.h"
 

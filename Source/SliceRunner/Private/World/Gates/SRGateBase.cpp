@@ -1,6 +1,6 @@
 // Copyright (c) 2025 algorithmicbird  -- See MIT License for details.
 
-#include "Gates/SRGateBase.h"
+#include "World/Gates/SRGateBase.h"
 #include "Components/BoxComponent.h"
 #include "PlayerCharacter/SRPlayerCharacter.h"
 #include "Debug/DebugHelper.h"
