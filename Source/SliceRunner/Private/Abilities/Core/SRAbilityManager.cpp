@@ -5,7 +5,7 @@
 #include "Abilities/Core/SRAbilityActivationContext.h"
 #include "Debug/DebugHelper.h"
 
-USRAbilityManager::USRAbilityManager() { PrimaryComponentTick.bCanEverTick = false; }
+USRAbilityManager::USRAbilityManager() { PrimaryComponentTick.bCanEverTick = true; }
 
 void USRAbilityManager::BeginPlay()
 {
@@ -21,6 +21,8 @@ void USRAbilityManager::TickComponent(
 )
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    FString DebugMsg = GetNameSafe(GetOwner()) + ActiveAbilities.ToStringSimple();
+    Debug::Print(DebugMsg, 2);
 }
 
 void USRAbilityManager::AddAbility(AActor *Instigator, TSubclassOf<USRAbilityBase> AbilityClass)

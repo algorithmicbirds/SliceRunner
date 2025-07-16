@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "GameplayTagContainer.h"
 #include "SRAbilityManager.generated.h"
 
 class USRAbilityBase;
@@ -38,4 +39,7 @@ class SLICERUNNER_API USRAbilityManager : public UActorComponent
 
     UFUNCTION(BlueprintCallable, Category = "Ability")
     bool StopAbilityByName(AActor *Instigator, FName AbilityName);
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability|Tags")
+    FGameplayTagContainer ActiveAbilities;
 };
