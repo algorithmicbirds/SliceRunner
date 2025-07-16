@@ -31,8 +31,8 @@ If you're looking to access the full project (for educational use only), contact
 
 ## Licensing
 
--Code: Copyright © 2025 algorithmicbird. All rights reserved.
--Everything else: [Unreal Engine EULA](https://www.unrealengine.com/en-US/eula)
+- Code: Copyright © 2025 algorithmicbird. All rights reserved.
+- Everything else: [Unreal Engine EULA](https://www.unrealengine.com/en-US/eula)
 
 ## Credits
 
