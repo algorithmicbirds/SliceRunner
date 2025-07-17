@@ -195,11 +195,12 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue &InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
-        StartDashing();
+        FSRAbilityActivationContext Context{};
+        AbilityManager->StartAbilityByName(this, "Dash", Context);
     }
     else
     {
-        StopDashing();
+        AbilityManager->StopAbilityByName(this, "Dash");
     }
 }
 
@@ -217,26 +218,6 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
     }
 }
 
-#pragma endregion
-
-#pragma region Dash
-void ASRPlayerCharacter::StartDashing()
-{
-    if (GetCharacterMovement()->IsFalling())
-    {
-        bIsDashing = true;
-        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.2f);
-    }
-}
-
-void ASRPlayerCharacter::StopDashing()
-{
-    bIsDashing = false;
-    UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
-    const FVector DashDir = Controller->GetControlRotation().Vector();
-    const float DashStrength = 1000.0f;
-    LaunchCharacter(DashDir * DashStrength, true, true);
-}
 #pragma endregion
 
 void ASRPlayerCharacter::NotifyHit(

@@ -3,25 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Abilities/Core/SRAbilityBase.h"
 #include "SRDashAbility.generated.h"
 
+class ASRBaseCharacter;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SLICERUNNER_API USRDashComponent : public UActorComponent
+UCLASS()
+class SLICERUNNER_API USRDashAbility : public USRAbilityBase
 {
-        GENERATED_BODY()
+    GENERATED_BODY()
 
-public: 
-        // Sets default values for this component's properties
-        USRDashComponent();
+  public:
+    virtual void StartAbility(AActor *Instigator, const FSRAbilityActivationContext &Context) override;
+    virtual void StopAbility(AActor *Instigator) override;
 
-protected:
-        // Called when the game starts
-        virtual void BeginPlay() override;
-
-public: 
-        // Called every frame
-        virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+  protected:
+    TObjectPtr<ASRBaseCharacter> Character;
 };
