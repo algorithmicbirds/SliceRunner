@@ -208,7 +208,7 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
     if (InputActionValue.Get<bool>())
     {
         FSRAbilityActivationContext Context;
-        Context.HitResults = GrappleDetectionComponent->CheckForGrapplePoints();
+        Context.HitResults = GrappleDetectionComponent->GetGrappleHitResult();
         AbilityManager->StartAbilityByName(this, "Grapple", Context);
     }
     else

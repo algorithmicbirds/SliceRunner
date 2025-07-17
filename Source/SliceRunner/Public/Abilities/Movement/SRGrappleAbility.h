@@ -32,7 +32,6 @@ class SLICERUNNER_API USRGrappleAbility : public USRAbilityBase
     UPROPERTY(EditDefaultsOnly, Category = "Grapple")
     float GrappleSpeed = 2500.0f;
 
-    bool bIsGrappling = false;
     FTimerHandle UpdateGrappleMovementTimerHandle;
     FVector CurrentGrappleTarget;
     

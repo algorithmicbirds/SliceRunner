@@ -21,6 +21,7 @@ class USRGrappleDetectionComponent : public UActorComponent
     virtual void BeginPlay() override;
 
     FHitResult GetFirstValidGrapplePoint();
+    void CheckForGrapplePoints();
     
     UPROPERTY()
     TObjectPtr<ASRGrapplePoint> GrapplePoint = nullptr;
@@ -28,9 +29,10 @@ class USRGrappleDetectionComponent : public UActorComponent
     UPROPERTY()
     TObjectPtr<ASRBaseCharacter> Character = nullptr;
     FTimerHandle GrappleCheckTimerHandle;
+    FHitResult LastGrappleHitResult;
 
   public:
-    FHitResult CheckForGrapplePoints();
+    FHitResult GetGrappleHitResult();
     void EnableGrappleDetection();
     void DisableGrappleDetection();
 };

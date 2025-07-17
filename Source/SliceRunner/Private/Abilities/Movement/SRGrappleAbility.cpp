@@ -15,7 +15,6 @@ void USRGrappleAbility::StartAbility(AActor *Instigator, const FSRAbilityActivat
     Super::StartAbility(Instigator, Context);
     Character = CastChecked<ASRBaseCharacter>(Instigator);
     FHitResult Results = Context.HitResults;
-    Debug::Print("Start Ability: Grapple");
     Grapple(Results);
 }
 
@@ -29,8 +28,8 @@ void USRGrappleAbility::Grapple(const FHitResult &HitResult)
 {
     if (!HitResult.bBlockingHit || !Character)
         return;
+    Debug::Print("Start Ability: Grapple");
 
-    bIsGrappling = true;
     CurrentGrappleTarget = HitResult.ImpactPoint;
 
     Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -71,8 +70,6 @@ void USRGrappleAbility::ResetGrappleState()
 {
     if (!Character)
         return;
-
-    bIsGrappling = false;
 
     Character->GetCharacterMovement()->GravityScale = 1.0f;
     Character->GetCharacterMovement()->SetMovementMode(MOVE_Falling);

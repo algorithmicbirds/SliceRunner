@@ -3,6 +3,7 @@
 #include "Abilities/Movement/SRGrappleDetectionComponent.h"
 #include "World/GrapplePoint/SRGrapplePoint.h"
 #include "PlayerCharacter/SRBaseCharacter.h"
+#include "Debug/DebugHelper.h"
 
 USRGrappleDetectionComponent::USRGrappleDetectionComponent() { PrimaryComponentTick.bCanEverTick = false; }
 
@@ -28,10 +29,10 @@ FHitResult USRGrappleDetectionComponent::GetFirstValidGrapplePoint()
 
     FCollisionObjectQueryParams ObjectQueryParams;
     ObjectQueryParams.AddObjectTypesToQuery(ECC_GameTraceChannel2);
-
     bool bHit = GetWorld()->SweepMultiByObjectType(
         OutHits, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), QueryParam
     );
+    //Debug::DrawSweepDebug(GetWorld(), Start, End, TraceRadius, OutHits);
 
     for (const FHitResult &Hit : OutHits)
     {
@@ -44,7 +45,7 @@ FHitResult USRGrappleDetectionComponent::GetFirstValidGrapplePoint()
     return FHitResult();
 }
 
-FHitResult USRGrappleDetectionComponent::CheckForGrapplePoints()
+void USRGrappleDetectionComponent::CheckForGrapplePoints()
 {
     if (GrapplePoint)
     {
@@ -60,13 +61,15 @@ FHitResult USRGrappleDetectionComponent::CheckForGrapplePoints()
         GrapplePoint = HitPoint;
     }
 
-    return Hit;
+    LastGrappleHitResult = Hit;
 }
+
+FHitResult USRGrappleDetectionComponent::GetGrappleHitResult() { return LastGrappleHitResult; }
 
 void USRGrappleDetectionComponent::EnableGrappleDetection()
 {
     GetWorld()->GetTimerManager().SetTimer(
-        GrappleCheckTimerHandle, FTimerDelegate::CreateLambda([this]() { CheckForGrapplePoints(); }), 0.1f, true
+        GrappleCheckTimerHandle, this, &USRGrappleDetectionComponent::CheckForGrapplePoints, 0.1f, true
     );
 }
 
