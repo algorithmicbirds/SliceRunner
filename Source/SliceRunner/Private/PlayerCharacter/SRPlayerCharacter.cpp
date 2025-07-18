@@ -68,7 +68,7 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
-        SRGameplayTags::InputTag_Move,
+        SRGameplayTags::InputTags::Move,
         ETriggerEvent::Triggered,
         this,
         &ASRPlayerCharacter::Input_Move
@@ -76,7 +76,7 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
-        SRGameplayTags::InputTag_Look,
+        SRGameplayTags::InputTags::Look,
         ETriggerEvent::Triggered,
         this,
         &ASRPlayerCharacter::Input_Look
@@ -84,7 +84,7 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
-        SRGameplayTags::InputTag_Jump,
+        SRGameplayTags::InputTags::Jump,
         ETriggerEvent::Triggered,
         this,
         &ASRPlayerCharacter::Input_Jump
@@ -92,7 +92,7 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
-        SRGameplayTags::InputTag_Dash,
+        SRGameplayTags::InputTags::Dash,
         ETriggerEvent::Triggered,
         this,
         &ASRPlayerCharacter::Input_Dash
@@ -100,7 +100,7 @@ void ASRPlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputC
 
     SRInputComp->BindNativeInputAction(
         InputDataAssetConfig,
-        SRGameplayTags::InputTag_Grapple,
+        SRGameplayTags::InputTags::Grapple,
         ETriggerEvent::Triggered,
         this,
         &ASRPlayerCharacter::Input_Grapple

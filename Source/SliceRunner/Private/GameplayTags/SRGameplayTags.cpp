@@ -4,11 +4,22 @@
 
 namespace SRGameplayTags
 {
-UE_DEFINE_GAMEPLAY_TAG(InputTag_Move, "InputTag.Move");
-UE_DEFINE_GAMEPLAY_TAG(InputTag_Look, "InputTag.Look");
-UE_DEFINE_GAMEPLAY_TAG(InputTag_Jump, "InputTag.Jump");
-UE_DEFINE_GAMEPLAY_TAG(InputTag_Dash, "InputTag.Dash");
-UE_DEFINE_GAMEPLAY_TAG(InputTag_Grapple, "InputTag.Grapple");
+    namespace InputTags
+    {
 
-UE_DEFINE_GAMEPLAY_TAG(Movement_Grapple, "MovementTag.Grapple");
+        UE_DEFINE_GAMEPLAY_TAG(Move, "InputTag.Move");
+        UE_DEFINE_GAMEPLAY_TAG(Look, "InputTag.Look");
+        UE_DEFINE_GAMEPLAY_TAG(Jump, "InputTag.Jump");
+        UE_DEFINE_GAMEPLAY_TAG(Dash, "InputTag.Dash");
+        UE_DEFINE_GAMEPLAY_TAG(Grapple, "InputTag.Grapple");
+    } // namespace InputTags
+    namespace AbilityTags
+    {
+        namespace Movement
+        {
+            UE_DEFINE_GAMEPLAY_TAG(Grapple, "AbilityTag.Movement.Grapple");
+            UE_DEFINE_GAMEPLAY_TAG(WallRun, "AbilityTag.Movement.WallRun");
+            UE_DEFINE_GAMEPLAY_TAG(Dash, "AbilityTag.Movement.Dash");
+        } // namespace Movement
+    } // namespace AbilityTags
 } // namespace SRGameplayTags
