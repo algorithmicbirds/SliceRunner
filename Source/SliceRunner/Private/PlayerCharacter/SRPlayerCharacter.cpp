@@ -10,10 +10,8 @@
 #include "GameplayTags/SRGameplayTags.h"
 #include "Core/Input/SREnhancedInputComponent.h"
 #include "Debug/DebugHelper.h"
-#include "Abilities/Core/SRAbilityManager.h"
-#include "Abilities/Core/SRAbilityActivationContext.h"
 #include "Abilities/Movement/SRGrappleDetectionComponent.h"
-
+#include "Abilities/Core/SRAbilitySystemComponent.h"
 
 ASRPlayerCharacter::ASRPlayerCharacter()
 {
@@ -36,7 +34,6 @@ ASRPlayerCharacter::ASRPlayerCharacter()
 
     GrappleDetectionComponent = CreateDefaultSubobject<USRGrappleDetectionComponent>(TEXT("GrappleDetectionComponent"));
 
-    AbilityManager = CreateDefaultSubobject<USRAbilityManager>(TEXT("AbilityManager"));
 }
 
 
@@ -47,7 +44,18 @@ void ASRPlayerCharacter::BeginPlay() {
 
 void ASRPlayerCharacter::Landed(const FHitResult &Hit)
 {
-    Super::Landed(Hit);
+    Super::Landed(Hit); }
+
+void ASRPlayerCharacter::PossessedBy(AController *NewController) { Super::PossessedBy(NewController);
+if (SRAbilitySystemComponent)
+{
+    FString DebugMsg = FString::Printf(
+        TEXT("Owner Actor: %s Avatar Actor %s"),
+        *SRAbilitySystemComponent->GetOwnerActor()->GetActorNameOrLabel(),
+        *SRAbilitySystemComponent->GetOwnerActor()->GetActorNameOrLabel()
+    );
+    Debug::Print(DebugMsg);
+}
 }
 
 void ASRPlayerCharacter::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
@@ -195,12 +203,12 @@ void ASRPlayerCharacter::Input_Dash(const FInputActionValue &InputActionValue)
 {
     if (InputActionValue.Get<bool>())
     {
-        FSRAbilityActivationContext Context{};
-        AbilityManager->StartAbilityByName(this, "Dash", Context);
+        //FSRAbilityActivationContext Context{};
+        //AbilityManager->StartAbilityByName(this, "Dash", Context);
     }
     else
     {
-        AbilityManager->StopAbilityByName(this, "Dash");
+        //AbilityManager->StopAbilityByName(this, "Dash");
     }
 }
 
@@ -208,13 +216,13 @@ void ASRPlayerCharacter::Input_Grapple(const FInputActionValue &InputActionValue
 {
     if (InputActionValue.Get<bool>())
     {
-        FSRAbilityActivationContext Context;
+  /*      FSRAbilityActivationContext Context;
         Context.HitResults = GrappleDetectionComponent->GetGrappleHitResult();
-        AbilityManager->StartAbilityByName(this, "Grapple", Context);
+        AbilityManager->StartAbilityByName(this, "Grapple", Context);*/
     }
     else
     {
-        AbilityManager->StopAbilityByName(this, "Grapple");
+        //AbilityManager->StopAbilityByName(this, "Grapple");
     }
 }
 
@@ -231,7 +239,7 @@ void ASRPlayerCharacter::NotifyHit(
     const FHitResult &Hit
 )
 {
-    FSRAbilityActivationContext Context;
+  /*  FSRAbilityActivationContext Context;
     Context.HitResults = Hit;
-    AbilityManager->StartAbilityByName(this, "WallRun", Context);
+    AbilityManager->StartAbilityByName(this, "WallRun", Context);*/
 }

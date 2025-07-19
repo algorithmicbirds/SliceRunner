@@ -12,7 +12,8 @@
 				"Engine",
 				"EnhancedInput",
 				"UMG",
-				"CoreUObject"
+				"CoreUObject",
+				"GameplayAbilities"
 			]
 		}
 	],
@@ -35,6 +36,10 @@
 		},
 		{
 			"Name": "GizmoEdMode",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayAbilities",
 			"Enabled": true
 		}
 	]

@@ -16,8 +16,9 @@ public class SliceRunner : ModuleRules
 			"EnhancedInput", 
 			"GameplayTags", 
 			"UMG",
-			"CableComponent",
-			"Niagara"
+			"Niagara",
+			"GameplayTasks",
+			"GameplayAbilities"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

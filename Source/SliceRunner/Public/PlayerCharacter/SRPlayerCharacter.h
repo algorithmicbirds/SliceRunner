@@ -13,7 +13,6 @@ class UCameraComponent;
 class USRDataAsset_InputConfig;
 class UCableComponent;
 class UStaticMeshComponent;
-class USRAbilityManager;
 class USRGrappleDetectionComponent;
 
 UCLASS()
@@ -30,6 +29,7 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
   protected:
     virtual void BeginPlay() override;
     virtual void Landed(const FHitResult &Hit) override;
+    virtual void PossessedBy(AController *NewController) override;
     virtual void NotifyHit(
         UPrimitiveComponent *MyComp,
         AActor *Other,
@@ -54,10 +54,6 @@ class SLICERUNNER_API ASRPlayerCharacter : public ASRBaseCharacter
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UStaticMeshComponent *WeaponMesh;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USRAbilityManager *AbilityManager;
-
 #pragma endregion
 
 #pragma region Inputs
